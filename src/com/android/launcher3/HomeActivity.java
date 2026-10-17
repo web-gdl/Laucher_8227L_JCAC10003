@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -60,6 +61,10 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private int favIconPx;
     private int appIconPx;
     private boolean globalsWritten;
+    private boolean resumed;
+    // Avance de la barra de progreso de apps de terceros: solo mientras suena y el inicio está visible
+    private final Handler ticker = new Handler();
+    private final Runnable tick = new Runnable() { @Override public void run() { renderMedia(); } };
 
     // ------------------------------------------------------------------ ciclo de vida
 
@@ -152,6 +157,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     @Override protected void onResume() {
         super.onResume();
+        resumed = true;
         bridge.setHomeVisible(true);
         clock.start();
         status.start();
@@ -160,6 +166,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     }
 
     @Override protected void onPause() {
+        resumed = false;
+        ticker.removeCallbacks(tick);
         bridge.setHomeVisible(false);
         clock.stop();
         status.stop();
@@ -255,6 +263,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
             if (!m.isThirdParty()) m.sourcePackage = null;
         }
         mediaWidget.render(m, bridge.isMediaOnline());
+        ticker.removeCallbacks(tick);
+        if (resumed && m.fromSession && m.isPlaying() && m.duration > 0) ticker.postDelayed(tick, 1000);
     }
 
     @Override public void onAccChanged(boolean on) { /* el servicio apaga la pantalla; nada que hacer aquí */ }
