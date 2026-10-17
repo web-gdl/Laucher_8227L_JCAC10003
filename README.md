@@ -114,7 +114,7 @@ Sin Gradle ni Android Studio. Necesitas JDK 17+, Python 3, `curl` y `unzip`.
 ```
 
 La cadena es `aapt2` → `javac --release 8` → `D8` → zip → firma v1+v2 (`apksig`) → verificación. Cada push a `main` compila las dos variantes
-(artefactos de *Actions*) y cada etiqueta `v*` publica una *Release* con los APK ([`release.yml`](.github/workflows/release.yml)).
+(artefactos de *Actions*) y cada cambio de [`VERSION`](VERSION) (o etiqueta `v*`) publica una *Release* con los APK ([`release.yml`](.github/workflows/release.yml)).
 
 ### Estructura
 

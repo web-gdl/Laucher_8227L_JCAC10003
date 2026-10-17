@@ -1,11 +1,14 @@
 name: Publicar APK
 
-# Al crear una etiqueta v* (p. ej. v3.0.1) compila y publica una Release con los APK adjuntos.
+# Publica una Release con los APK adjuntos cuando cambia el archivo VERSION en main (o al subir una etiqueta v*).
+# Para sacar una versión nueva: edita VERSION (p. ej. 3.0.1) y haz push; la etiqueta v3.0.1 se crea sola.
 # Enlaces fijos a la última versión:
 #   .../releases/latest/download/launcher-prueba.apk
 #   .../releases/latest/download/launcher-reemplazo.apk
 on:
   push:
+    branches: [ main ]
+    paths: [ 'VERSION' ]
     tags: [ 'v*' ]
   workflow_dispatch:
 
@@ -36,11 +39,18 @@ jobs:
           cp out/launcher-nativo.apk dist/launcher-reemplazo.apk
           cd dist && sha256sum *.apk | tee SHA256SUMS.txt
 
+      - name: Versión
+        id: ver
+        run: |
+          if [ "${GITHUB_REF_TYPE}" = tag ]; then V="${GITHUB_REF_NAME#v}"; else V="$(tr -d ' \n' < VERSION)"; fi
+          echo "v=$V" >> "$GITHUB_OUTPUT"
+
       - name: Publicar Release
-        if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          name: Launcher nativo ${{ github.ref_name }}
+          tag_name: v${{ steps.ver.outputs.v }}
+          target_commitish: ${{ github.sha }}
+          name: Launcher nativo v${{ steps.ver.outputs.v }}
           generate_release_notes: true
           body: |
             ## Qué descargar
