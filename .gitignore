@@ -1,0 +1,6 @@
+build/
+out/
+tools/aapt2
+tools/*.jar
+tools/platform.*
+*.apk

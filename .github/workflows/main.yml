@@ -3,6 +3,7 @@ name: Compilar APK
 on:
   push:
     branches: [ main ]
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -16,41 +17,22 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Extraer el proyecto
-        run: bash launcher-nativo-src.sh
-
       - name: Descargar herramientas
-        working-directory: launcher-nativo
         run: ./tools/get-tools.sh
 
-      - name: Preparar versión de prueba (app normal, convive con el launcher de fábrica)
-        run: |
-          cp -r launcher-nativo launcher-prueba
-          cd launcher-prueba
-          sed -i '/android:sharedUserId=/d; /android:persistent=/d' AndroidManifest.xml
-          sed -i '/category.HOME/a\                <category android:name="android.intent.category.LAUNCHER" />' AndroidManifest.xml
-          sed -i 's#<string name="app_name">Inicio</string>#<string name="app_name">Inicio (prueba)</string>#' res/values/strings.xml
-          sed -i 's#<string name="app_name">Home</string>#<string name="app_name">Home (test)</string>#' res/values-en/strings.xml
-          sed -i 's/if (bridge.isHomeVisible()) bridge.openMemoryApp();/if (bridge.isHomeVisible() \&\& "com.android.launcher3".equals(getPackageName())) bridge.openMemoryApp();/' src/com/android/launcher3/LauncherApp.java
-          sed -i 's/--no-auto-version/--rename-manifest-package com.webgdl.launcher8227 --no-auto-version/' build.sh
-          grep -n "sharedUserId\|persistent\|LAUNCHER" AndroidManifest.xml || true
+      - name: Compilar las dos variantes (prueba y reemplazo)
+        run: ./build.sh --variant ambas
 
-      - name: Compilar versión de prueba
-        working-directory: launcher-prueba
-        run: ./build.sh && mv out/launcher-nativo.apk out/launcher-prueba.apk
-
-      - name: Compilar versión de reemplazo (sistema)
-        working-directory: launcher-nativo
-        run: ./build.sh
-
-      - name: Guardar APK de prueba
+      - name: Guardar APK de prueba (convive con el launcher de fábrica)
         uses: actions/upload-artifact@v4
         with:
           name: launcher-PRUEBA-apk
-          path: launcher-prueba/out/launcher-prueba.apk
+          path: out/launcher-prueba.apk
+          if-no-files-found: error
 
-      - name: Guardar APK de reemplazo
+      - name: Guardar APK de reemplazo (sustituye al de fábrica)
         uses: actions/upload-artifact@v4
         with:
           name: launcher-reemplazo-apk
-          path: launcher-nativo/out/launcher-nativo.apk
+          path: out/launcher-nativo.apk
+          if-no-files-found: error

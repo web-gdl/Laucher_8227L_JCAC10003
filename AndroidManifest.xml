@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Launcher nativo para el autoestéreo alps 8227L (Jancar).
+  Conserva la identidad del launcher de fábrica (paquete, sharedUserId, persistent)
+  para heredar sus privilegios y poder instalarse como actualización.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.android.launcher3"
+    android:sharedUserId="android.uid.system"
+    android:versionCode="2021"
+    android:versionName="3.0.0-nativo">
+
+    <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="27" />
+
+    <!-- Para los Settings.Global que SystemUI de Jancar consulta -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
+    <!-- Estado Bluetooth / Wi-Fi en la barra de estado propia -->
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- Desinstalar apps desde el menú contextual -->
+    <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- Permiso de firma: lista las sesiones multimedia (solo lo concede la firma de plataforma) -->
+    <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
+    <!-- Reutilizado del launcher original: el servicio comprueba la actividad superior -->
+    <uses-permission android:name="android.permission.GET_TASKS" />
+
+    <application
+        android:name=".LauncherApp"
+        android:label="@string/app_name"
+        android:icon="@drawable/ic_launcher"
+        android:theme="@style/Theme.Launcher"
+        android:persistent="true"
+        android:allowBackup="false"
+        android:hardwareAccelerated="true"
+        android:supportsRtl="false"
+        android:extractNativeLibs="false">
+
+        <activity
+            android:name=".HomeActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:stateNotNeeded="true"
+            android:excludeFromRecents="true"
+            android:resumeWhilePausing="true"
+            android:screenOrientation="nosensor"
+            android:configChanges="orientation|screenSize|keyboardHidden|uiMode|screenLayout"
+            android:windowSoftInputMode="adjustPan"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.HOME" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".DiagnosticsActivity"
+            android:label="@string/diag_title"
+            android:excludeFromRecents="true"
+            android:screenOrientation="nosensor"
+            android:exported="false" />
+    </application>
+</manifest>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Pantalla de referencia: 1024x600 (se asume mdpi, 1 dp = 1 px) -->
+    <dimen name="page_pad">20dp</dimen>
+    <dimen name="gap">14dp</dimen>
+    <dimen name="card_radius">18dp</dimen>
+    <dimen name="tile_radius">16dp</dimen>
+
+    <dimen name="clock_size">104sp</dimen>
+    <dimen name="date_size">22sp</dimen>
+    <dimen name="status_icon">26dp</dimen>
+
+    <dimen name="cover_size">112dp</dimen>
+    <dimen name="media_title">22sp</dimen>
+    <dimen name="media_artist">17sp</dimen>
+    <dimen name="media_btn">56dp</dimen>
+    <dimen name="media_icon">30dp</dimen>
+
+    <dimen name="fav_icon">72dp</dimen>
+    <dimen name="fav_label">15sp</dimen>
+    <dimen name="app_icon">64dp</dimen>
+    <dimen name="app_label">14sp</dimen>
+
+    <dimen name="bar_height">64dp</dimen>
+    <dimen name="bar_icon">28dp</dimen>
+    <dimen name="bar_text">15sp</dimen>
+</resources>

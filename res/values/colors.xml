@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Paleta nocturna para cabina: fondo casi negro, superficies grafito, acento ámbar -->
+    <color name="bg">#FF0B0D11</color>
+    <color name="surface">#FF161A21</color>
+    <color name="surface_high">#FF1F242D</color>
+    <color name="outline">#FF2A303B</color>
+    <color name="text">#FFECEFF4</color>
+    <color name="text_dim">#FF8A94A6</color>
+    <color name="accent">#FFFFB74D</color>
+    <color name="accent_dim">#66FFB74D</color>
+    <color name="ok">#FF66BB6A</color>
+    <color name="warn">#FFEF5350</color>
+    <color name="ripple">#33FFFFFF</color>
+    <color name="scrim">#CC0B0D11</color>
+</resources>

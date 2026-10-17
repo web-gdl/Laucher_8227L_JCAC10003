@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Inicio</string>
+    <string name="app_name_test">Inicio (prueba)</string>
+
+    <!-- Pantalla principal -->
+    <string name="all_apps">Aplicaciones</string>
+    <string name="screen_off">Apagar pantalla</string>
+    <string name="settings">Ajustes</string>
+    <string name="diagnostics">Diagnóstico</string>
+    <string name="back">Volver</string>
+    <string name="empty_slot">Añadir</string>
+    <string name="no_apps">No hay aplicaciones</string>
+
+    <!-- Estado -->
+    <string name="bt_connected">Bluetooth conectado</string>
+    <string name="bt_on">Bluetooth</string>
+    <string name="wifi">Wi-Fi</string>
+
+    <!-- Música -->
+    <string name="media_idle">Sin reproducción</string>
+    <string name="media_open_hint">Toca para abrir la música</string>
+    <string name="media_source_music">Música</string>
+    <string name="media_source_radio">Radio</string>
+    <string name="media_source_bt">Bluetooth</string>
+    <string name="media_source_video">Vídeo</string>
+    <string name="media_source_other">Reproductor</string>
+    <string name="media_service_offline">Servicio del estéreo no disponible</string>
+    <string name="play">Reproducir</string>
+    <string name="pause">Pausa</string>
+    <string name="next">Siguiente</string>
+    <string name="previous">Anterior</string>
+    <string name="choose_media_app">App para el widget de música</string>
+
+    <!-- Menú contextual -->
+    <string name="add_favorite">Añadir a favoritos</string>
+    <string name="remove_favorite">Quitar de favoritos</string>
+    <string name="hide_app">Ocultar</string>
+    <string name="show_hidden">Mostrar ocultas</string>
+    <string name="hide_hidden">Ocultar las ocultas</string>
+    <string name="app_info">Información de la app</string>
+    <string name="uninstall">Desinstalar</string>
+    <string name="favorites_full">Los favoritos están llenos (%1$d). Quita uno primero.</string>
+
+    <!-- Diagnóstico -->
+    <string name="diag_title">Diagnóstico del launcher</string>
+    <string name="diag_refresh">Actualizar</string>
+    <string name="diag_reconnect">Reconectar servicios</string>
+    <string name="diag_gc">Forzar GC</string>
+    <string name="diag_save">Guardar informe</string>
+    <string name="diag_saved">Informe guardado en %1$s</string>
+    <string name="diag_save_failed">No se pudo guardar el informe</string>
+</resources>
