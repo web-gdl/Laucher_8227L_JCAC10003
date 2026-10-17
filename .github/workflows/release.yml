@@ -1,0 +1,55 @@
+name: Publicar APK
+
+# Al crear una etiqueta v* (p. ej. v3.0.1) compila y publica una Release con los APK adjuntos.
+# Enlaces fijos a la última versión:
+#   .../releases/latest/download/launcher-prueba.apk
+#   .../releases/latest/download/launcher-reemplazo.apk
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Descargar herramientas
+        run: ./tools/get-tools.sh
+
+      - name: Compilar las dos variantes
+        run: ./build.sh --variant ambas
+
+      - name: Nombrar los archivos y calcular sumas
+        run: |
+          mkdir -p dist
+          cp out/launcher-prueba.apk dist/launcher-prueba.apk
+          cp out/launcher-nativo.apk dist/launcher-reemplazo.apk
+          cd dist && sha256sum *.apk | tee SHA256SUMS.txt
+
+      - name: Publicar Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Launcher nativo ${{ github.ref_name }}
+          generate_release_notes: true
+          body: |
+            ## Qué descargar
+            - **`launcher-prueba.apk`** — empieza por este. Se instala como una app normal y convive con el launcher de fábrica.
+            - **`launcher-reemplazo.apk`** — sustituye al launcher de fábrica (necesita `adb`). Solo para quien sepa revertirlo.
+
+            Guía de instalación y capturas en el [README](https://github.com/${{ github.repository }}#readme).
+            Dominio público (Unlicense).
+          files: |
+            dist/launcher-prueba.apk
+            dist/launcher-reemplazo.apk
+            dist/SHA256SUMS.txt
