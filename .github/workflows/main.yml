@@ -23,12 +23,34 @@ jobs:
         working-directory: launcher-nativo
         run: ./tools/get-tools.sh
 
-      - name: Compilar y firmar
+      - name: Preparar versión de prueba (app normal, convive con el launcher de fábrica)
+        run: |
+          cp -r launcher-nativo launcher-prueba
+          cd launcher-prueba
+          sed -i '/android:sharedUserId=/d; /android:persistent=/d' AndroidManifest.xml
+          sed -i '/category.HOME/a\                <category android:name="android.intent.category.LAUNCHER" />' AndroidManifest.xml
+          sed -i 's#<string name="app_name">Inicio</string>#<string name="app_name">Inicio (prueba)</string>#' res/values/strings.xml
+          sed -i 's#<string name="app_name">Home</string>#<string name="app_name">Home (test)</string>#' res/values-en/strings.xml
+          sed -i 's/if (bridge.isHomeVisible()) bridge.openMemoryApp();/if (bridge.isHomeVisible() \&\& "com.android.launcher3".equals(getPackageName())) bridge.openMemoryApp();/' src/com/android/launcher3/LauncherApp.java
+          sed -i 's/--no-auto-version/--rename-manifest-package com.webgdl.launcher8227 --no-auto-version/' build.sh
+          grep -n "sharedUserId\|persistent\|LAUNCHER" AndroidManifest.xml || true
+
+      - name: Compilar versión de prueba
+        working-directory: launcher-prueba
+        run: ./build.sh && mv out/launcher-nativo.apk out/launcher-prueba.apk
+
+      - name: Compilar versión de reemplazo (sistema)
         working-directory: launcher-nativo
         run: ./build.sh
 
-      - name: Guardar el APK
+      - name: Guardar APK de prueba
         uses: actions/upload-artifact@v4
         with:
-          name: launcher-nativo-apk
+          name: launcher-PRUEBA-apk
+          path: launcher-prueba/out/launcher-prueba.apk
+
+      - name: Guardar APK de reemplazo
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-reemplazo-apk
           path: launcher-nativo/out/launcher-nativo.apk
