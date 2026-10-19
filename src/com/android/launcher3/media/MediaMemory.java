@@ -4,6 +4,9 @@ import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ResolveInfo;
+
+import java.util.List;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -33,7 +36,11 @@ public final class MediaMemory implements JancarBridge.Listener {
     private static final long FRESH_BOOT_MS = 4 * 60 * 1000L;
     private static final long BOOT_DELAY_MS = 6000;       // igual que el launcher de fábrica
     private static final long BOOT_GIVE_UP_MS = 45000;     // esperar al servicio como mucho esto
-    private static final long WAKE_CHECK_MS = 6000;        // tras ACC ON, margen para que la app reanude sola
+    private static final long WAKE_CHECK_MS = 3000;        // tras ACC ON, margen para que la app reanude sola
+    private static final long WAKE_RETRY_MS = 5000;        // tras avisar a la app, margen antes del respaldo
+    /** Tras encender o arrancar, el servicio pasa un rato sin fuente: no cuenta como «el usuario la cerró». */
+    private static final long SETTLE_MS = 30000;
+    public static final String ACTION_ACC = "com.jancar.services.action.acc";
 
     private final Context app;
     private final JancarBridge bridge;
@@ -44,7 +51,9 @@ public final class MediaMemory implements JancarBridge.Listener {
 
     private String title, artist, pkg;
     private boolean accOff;
-    private boolean contentAtAccOff;
+    /** Había música al apagar (persistido: el servicio cierra este proceso al apagar el auto). */
+    private boolean active;
+    private long settleUntil;
     private boolean bootDone;
     private String lastAction = "-";
 
@@ -56,6 +65,8 @@ public final class MediaMemory implements JancarBridge.Listener {
         title = sp.getString("title", null);
         artist = sp.getString("artist", null);
         pkg = sp.getString("pkg", null);
+        active = sp.getBoolean("active", false);
+        settleUntil = SystemClock.elapsedRealtime() + SETTLE_MS;
         bridge.addListener(this);
     }
 
@@ -71,13 +82,19 @@ public final class MediaMemory implements JancarBridge.Listener {
 
     public String describe() {
         return "última: " + (hasLast() ? "'" + title + "' — " + artist : "ninguna") + " · app " + pkg
+                + " · sonaba al apagar: " + (active ? "sí" : "no")
                 + " · ACC " + (accOff ? "apagado" : "encendido") + " · última acción: " + lastAction;
     }
 
     // ------------------------------------------------------------------ JancarBridge.Listener
 
     @Override public void onMediaChanged(MediaState s) {
-        if (!s.hasContent()) return;
+        if (!s.hasContent()) {
+            // Sin fuente con el auto encendido y pasado el arranque: el usuario cerró la música.
+            if (active && !accOff && SystemClock.elapsedRealtime() > settleUntil) setActive(false);
+            return;
+        }
+        if (!accOff && !active) setActive(true);
         boolean changed = false, newTrack = !eq(title, s.title) || !eq(artist, s.artist);
         if (newTrack) {
             title = s.title;
@@ -96,30 +113,84 @@ public final class MediaMemory implements JancarBridge.Listener {
 
     @Override public void onServicesChanged() {}
 
+    /**
+     * Llega del callback del servicio, del broadcast y también con la lectura inicial al conectar
+     * (el proceso suele nacer con el auto aún apagado, porque el servicio lo cierra al apagar).
+     */
     @Override public void onAccChanged(boolean on) {
         if (!on) {
             if (!accOff) {
                 accOff = true;
-                contentAtAccOff = bridge.getMedia().hasContent();
-                Diag.log("memoria", "ACC OFF (sonaba algo: " + contentAtAccOff + ")");
+                main.removeCallbacks(wakeCheck);
+                main.removeCallbacks(wakeFallback);
+                Diag.log("memoria", "ACC OFF (sonaba: " + active + ")");
             }
         } else if (accOff) {
             accOff = false;
-            Diag.log("memoria", "ACC ON");
-            if (contentAtAccOff) main.postDelayed(wakeCheck, WAKE_CHECK_MS);
+            settleUntil = SystemClock.elapsedRealtime() + SETTLE_MS;
+            Diag.log("memoria", "ACC ON (sonaba al apagar: " + active + ")");
+            main.postDelayed(wakeCheck, WAKE_CHECK_MS);
         }
+    }
+
+    private void setActive(boolean v) {
+        active = v;
+        sp.edit().putBoolean("active", v).apply();
     }
 
     @Override public void onCcdChanged(int status) {}
 
+    /**
+     * Al encender: si la música no volvió sola, se avisa a la app de memoria con el aviso de la llave
+     * dirigido a ella (llega aunque la app esté cerrada). Las apps que lo escuchan, como
+     * RadilloPlayerWave, deciden si se reabren (solo si sonaban al apagar). Si la app no lo escucha,
+     * se la abre con boot_memory, solo si sonaba y desde la pantalla de inicio.
+     */
     private final Runnable wakeCheck = new Runnable() {
         @Override public void run() {
-            if (bridge.getMedia().hasContent()) { lastAction = "despertar: la app siguió sola"; Diag.log("memoria", lastAction); return; }
-            // Solo desde la pantalla de inicio: no tapar la navegación u otra app que el usuario tenga delante.
-            if (!bridge.isHomeVisible()) { lastAction = "despertar: omitido (inicio no visible)"; Diag.log("memoria", lastAction); return; }
-            openApp("despertar");
+            if (bridge.getMedia().hasContent()) { lastAction = "encender: la música siguió sola"; Diag.log("memoria", lastAction); return; }
+            String target = targetPackage();
+            if (target == null) { lastAction = "encender: sin app de memoria"; Diag.log("memoria", lastAction); return; }
+            if (sendAccOn(target)) {
+                lastAction = "encender: aviso de llave enviado a " + target;
+                Diag.log("memoria", lastAction);
+                return;
+            }
+            main.postDelayed(wakeFallback, 0);
         }
     };
+
+    private final Runnable wakeFallback = new Runnable() {
+        @Override public void run() {
+            if (bridge.getMedia().hasContent()) return;
+            if (!active) { lastAction = "encender: no sonaba al apagar"; Diag.log("memoria", lastAction); return; }
+            // No tapar la navegación u otra app que el usuario tenga delante.
+            if (!bridge.isHomeVisible()) { lastAction = "encender: omitido (inicio no visible)"; Diag.log("memoria", lastAction); return; }
+            openApp("encender");
+        }
+    };
+
+    /** Envía com.jancar.services.action.acc (acc=true) solo a {@code target}; false si no tiene receptor. */
+    private boolean sendAccOn(String target) {
+        Intent i = new Intent(ACTION_ACC).setPackage(target).putExtra("acc", true)
+                .addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES | Intent.FLAG_RECEIVER_FOREGROUND);
+        List<ResolveInfo> r;
+        try { r = app.getPackageManager().queryBroadcastReceivers(i, 0); } catch (RuntimeException e) { r = null; }
+        if (r == null || r.isEmpty()) return false;
+        try {
+            app.sendBroadcast(i);
+            return true;
+        } catch (RuntimeException e) {
+            Diag.warn("memoria", "aviso de llave a " + target, e);
+            return false;
+        }
+    }
+
+    private String targetPackage() {
+        String t = bridge.getMemoryAppPackage();
+        if (t == null || t.isEmpty()) t = pkg;
+        return t == null || t.isEmpty() ? null : t;
+    }
 
     // ------------------------------------------------------------------ arranque del estéreo
 
@@ -148,6 +219,12 @@ public final class MediaMemory implements JancarBridge.Listener {
                 Diag.log("memoria", lastAction);
                 return;
             }
+            String target = targetPackage();
+            if (target != null && sendAccOn(target)) {
+                lastAction = "arranque: aviso enviado a " + target;
+                Diag.log("memoria", lastAction);
+                return;
+            }
             openApp("arranque");
         }
     };
@@ -156,9 +233,8 @@ public final class MediaMemory implements JancarBridge.Listener {
 
     /** Abre la app de memoria con boot_memory=true (la app decide si sigue sonando). */
     public boolean openApp(String why) {
-        String target = bridge.getMemoryAppPackage();
-        if (target == null || target.isEmpty()) target = pkg;
-        if (target == null || target.isEmpty()) { lastAction = why + ": sin app conocida"; Diag.log("memoria", lastAction); return false; }
+        String target = targetPackage();
+        if (target == null) { lastAction = why + ": sin app conocida"; Diag.log("memoria", lastAction); return false; }
         Intent i = app.getPackageManager().getLaunchIntentForPackage(target);
         if (i == null) { lastAction = why + ": " + target + " no instalada"; Diag.log("memoria", lastAction); return false; }
         i.putExtra(EXTRA_BOOT_MEMORY, true);

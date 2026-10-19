@@ -282,7 +282,11 @@ public final class JancarBridge {
         } else if (link == carLink) {
             transactVoid(link.binder, DESC_CAR, CAR_REGISTER_CB, carCb);
             Boolean acc = transactBool(link.binder, DESC_CAR, CAR_IS_ACC_ON);
-            if (acc != null) { accOn = acc; accKnown = true; }
+            if (acc != null) {
+                accOn = acc; accKnown = true;
+                // Estado inicial: el proceso suele nacer con el auto apagado (el servicio lo cierra al apagar).
+                for (Listener l : new ArrayList<>(listeners)) l.onAccChanged(acc);
+            }
             Integer ccd = transactInt(link.binder, DESC_CAR, CAR_GET_CCD_STATUS);
             if (ccd != null) ccdStatus = ccd;
             Diag.log("bridge", "acc=" + accOn + " ccd=" + ccdStatus);

@@ -7,8 +7,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.launcher3"
     android:sharedUserId="android.uid.system"
-    android:versionCode="2024"
-    android:versionName="3.3.0-nativo">
+    android:versionCode="2025"
+    android:versionName="3.3.1-nativo">
 
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="27" />
 

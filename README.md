@@ -24,6 +24,14 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 > no la dibuja el launcher. Se regeneran con [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
 > [`docs/preview/render.py`](docs/preview/render.py). ¿Tienes capturas reales de tu estéreo? Se aceptan con gusto.
 
+### Novedades de la 3.3.1: corrección del encendido
+
+- El informe de Diagnóstico mostró que el estéreo no se reinicia al encender el auto: solo despierta, y el servicio
+  cierra la variante de prueba al apagar. Ahora el launcher toma como «apagado» el estado con el que nace, guarda si
+  sonaba música al apagar y, al encender, **avisa a la app de memoria con el aviso de la llave dirigido a ella**
+  (`com.jancar.services.action.acc`, llega aunque la app esté cerrada). RadilloPlayerWave decide si se reabre;
+  las apps que no escuchan ese aviso se abren con `boot_memory=true`, solo si sonaban y desde la pantalla de inicio.
+
 ### Novedades de la 3.3.0: la música vuelve al encender el auto
 
 - Al **arrancar el estéreo**, 6 s después (como el launcher de fábrica), se vuelve a abrir la **última app de música**
