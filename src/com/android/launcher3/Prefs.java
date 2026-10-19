@@ -16,6 +16,7 @@ public final class Prefs {
     private static final String KEY_HIDDEN = "hidden";         // StringSet de componentes
     private static final String KEY_MEDIA_APP = "media_app";   // paquete que abre el widget de música
     private static final String KEY_SHOW_HIDDEN = "show_hidden";
+    private static final String KEY_BACKDROP = "backdrop_palette"; // colores del último fondo (ui/Backdrop)
 
     /** Paquete de la app de música de fábrica (IVISystem.PACKAGE_MUSIC en el SDK Jancar). */
     public static final String DEFAULT_MEDIA_APP = "com.jancar.music";
@@ -64,6 +65,10 @@ public final class Prefs {
     public boolean getShowHidden() { return sp.getBoolean(KEY_SHOW_HIDDEN, false); }
 
     public void setShowHidden(boolean v) { sp.edit().putBoolean(KEY_SHOW_HIDDEN, v).apply(); }
+
+    public String getBackdrop() { return sp.getString(KEY_BACKDROP, null); }
+
+    public void setBackdrop(String palette) { sp.edit().putString(KEY_BACKDROP, palette).apply(); }
 
     public String getMediaApp() { return sp.getString(KEY_MEDIA_APP, DEFAULT_MEDIA_APP); }
 

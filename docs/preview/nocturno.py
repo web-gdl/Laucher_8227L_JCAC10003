@@ -57,7 +57,12 @@ def v2(real=False):
         dock = "".join(ring_app(i) for i in [0, 1, 2, 3, 4, 5]) + ring("apps", "Todas", accent=True)
     else:
         dock = "".join(ring(i, t) for i, t in DOCK) + ring("apps", "Todas", accent=True)
-    return frame(f"""<div style="position:absolute;left:50%;top:-140px;width:620px;height:620px;margin-left:-310px;border-radius:50%;background:{ART};filter:blur(110px);opacity:.22"></div>
+    if real:  # como el launcher 3.2: colores de la portada a toda la pantalla, difuminados y oscurecidos
+        bg = (f'<div style="position:absolute;inset:-80px;background:{ART};filter:blur(70px) saturate(1.2) brightness(.5)"></div>'
+              '<div style="position:absolute;left:0;right:0;bottom:0;height:220px;background:linear-gradient(transparent,rgba(0,0,0,.7))"></div>')
+    else:
+        bg = f'<div style="position:absolute;left:50%;top:-140px;width:620px;height:620px;margin-left:-310px;border-radius:50%;background:{ART};filter:blur(110px);opacity:.22"></div>'
+    return frame(f"""{bg}
 <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;padding:26px 40px 16px">
   <div style="display:flex;align-items:center;gap:30px">
     {cover(170, 85)}
@@ -80,7 +85,8 @@ def v2_idle():
     html = html.replace(f'<div style="margin-top:16px">{prog(34, 4)}</div>', '<div style="margin-top:16px;height:4px"></div>')
     html = html.replace("<span>1:17</span><span>3:45</span>", "<span>&nbsp;</span>")
     html = html.replace("AHORA SUENA · USB", "MÚSICA").replace("Camino de noche", "Sin reproducción").replace("Artista de ejemplo", "Toca para abrir la música")
-    html = html.replace(f"background:{ART}", "background:#1F242D").replace(ico('pause', 46.0, '#0B0D11'), ico('play', 46.0, '#0B0D11'))
+    # sin portada todavía: fondo negro (diseño base) y portada gris
+    html = html.replace(f"background:{ART};filter:blur(70px) saturate(1.2) brightness(.5)", "background:#000").replace(f"background:{ART}", "background:#1F242D").replace(ico('pause', 46.0, '#0B0D11'), ico('play', 46.0, '#0B0D11'))
     return html
 
 

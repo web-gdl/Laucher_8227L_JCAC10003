@@ -87,7 +87,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         btnToggleHidden = findViewById(R.id.btn_toggle_hidden);
 
         View mediaCard = findViewById(R.id.media_card);
-        mediaWidget = new MediaWidget(homeRoot, (ImageView) findViewById(R.id.halo));
+        mediaWidget = new MediaWidget(homeRoot, (ImageView) findViewById(R.id.backdrop), prefs);
 
         buildDock();
         appsAdapter = new AppsAdapter();

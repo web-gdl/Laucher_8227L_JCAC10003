@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Inicio «nocturno, música al centro» (propuesta 2). Área de referencia 1024x534 dp: la barra del
+  Inicio «nocturno, música al centro» (propuesta 2) con fondo de los colores de la portada. Área de referencia 1024x534 dp: la barra del
   sistema del estéreo ya muestra hora, Wi-Fi, GPS, Bluetooth y USB, así que aquí no se repiten.
 -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -15,23 +15,21 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- Halo: la portada reducida a 12x12 px y ampliada con filtro (se calcula una vez por portada) -->
+        <!-- Fondo: colores de la portada muy difuminados, a toda la pantalla (ui/Backdrop.java).
+             Si la canción no trae portada se queda el último fondo. -->
         <ImageView
-            android:id="@+id/halo"
-            android:layout_width="@dimen/halo_size"
-            android:layout_height="@dimen/halo_size"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/halo_offset"
+            android:id="@+id/backdrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:scaleType="fitXY"
-            android:alpha="0.30"
             android:importantForAccessibility="no" />
 
+        <!-- Oscurece la parte baja para que el dock se lea sobre cualquier fondo -->
         <View
-            android:layout_width="@dimen/halo_size"
-            android:layout_height="@dimen/halo_size"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/halo_offset"
-            android:background="@drawable/halo_mask" />
+            android:layout_width="match_parent"
+            android:layout_height="220dp"
+            android:layout_gravity="bottom"
+            android:background="@drawable/backdrop_scrim" />
 
         <LinearLayout
             android:layout_width="match_parent"
