@@ -20,8 +20,22 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 </p>
 
 > Las imágenes son un **render del diseño** a 1024×600 con datos de ejemplo (mismo layout, colores, medidas y vectores
-> que `res/`), no capturas del equipo ni los iconos reales de tus apps. Se regeneran con
+> que `res/`), no capturas del equipo ni los iconos reales de tus apps. La barra superior es la del sistema del estéreo,
+> no la dibuja el launcher. Se regeneran con [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
 > [`docs/preview/render.py`](docs/preview/render.py). ¿Tienes capturas reales de tu estéreo? Se aceptan con gusto.
+
+### Novedades de la 3.1.0: inicio «nocturno»
+
+- **Fondo negro puro** que se une con la barra del sistema y no deslumbra de noche.
+- **La música al centro**: portada redonda de 170 dp, título grande, tiempo transcurrido y total, y botones de 72 y 92 dp.
+  Detrás, un **halo** tenue con los colores de la portada.
+- **Sin reloj ni iconos de estado duplicados**: el estéreo ya muestra hora, Wi‑Fi, GPS, Bluetooth y USB en su barra.
+  Así se corrige también el reloj cortado («8:10 p…») de la 3.0.0 con formato de 12 horas.
+- **Dock de 6 favoritos** en anillos con el nombre a dos líneas, más «Todas» para el panel de aplicaciones.
+- Apagar pantalla, Ajustes y Diagnóstico pasan a la cabecera del panel de aplicaciones.
+- Nombres de apps a dos líneas también en el panel («Gestor de archivos» ya no se corta).
+
+El diseño se eligió entre 20 propuestas, que están en [`docs/bocetos/`](docs/bocetos/).
 
 ---
 
@@ -59,11 +73,12 @@ Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
 
 ## Qué hace
 
-- **Inicio** de una sola pantalla: reloj y fecha, estado de Bluetooth y Wi‑Fi, tarjeta de música, 8 favoritos (4×2) y barra inferior.
-- **Tarjeta de música** con título, artista, portada, progreso y anterior / play‑pausa / siguiente. Funciona con las fuentes de fábrica (música, radio,
+- **Inicio** de una sola pantalla: la música al centro y un dock con 6 favoritos y «Todas». La hora y el estado los da la barra del sistema.
+- **Música** con título, artista, portada redonda con halo, progreso, tiempos y anterior / play‑pausa / siguiente. Funciona con las fuentes de fábrica (música, radio,
   vídeo, Bluetooth) y con **apps de terceros**: para estas obtiene el paquete, el estado y la posición de la sesión multimedia de Android, de modo que
-  al tocar la tarjeta se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
+  al tocar la portada o el título se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
 - **Todas las aplicaciones** en una vista superpuesta (6 columnas), con menú contextual: añadir/quitar favoritos, ocultar, información de la app y desinstalar.
+  En su cabecera: mostrar ocultas, apagar pantalla, ajustes y diagnóstico. Pulsación larga en un favorito del dock para quitarlo.
 - **Apagar pantalla** con la misma llamada que usa el launcher de fábrica.
 - **Diagnóstico**: memoria, estado de los enlaces con el servicio del estéreo, ACC (tres fuentes para contrastarlas), cámara de reversa, sesiones multimedia y
   registro de eventos. Se puede guardar como informe de texto. Si el launcher se cierra, deja `files/crash.txt` con la pila.
@@ -74,10 +89,11 @@ Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
 - Una sola `Activity`; el panel de apps es una vista superpuesta, sin segunda pantalla ni animaciones.
 - Java sin Kotlin ni librerías de soporte (el APK pesa unos 80 KB).
 - Iconos rasterizados al tamaño de la celda en una caché de 3 MB con un único hilo de fondo; una sola portada viva.
-- Casi sin sondeo: el reloj usa `TIME_TICK`, Bluetooth y Wi‑Fi usan *broadcasts* y callbacks, y la música se actualiza por avisos del servicio.
-  Todo se registra al mostrarse la pantalla y se da de baja al salir. La única excepción es un refresco de 1 s de la barra de progreso de apps de terceros,
+- El halo de la portada es la imagen reducida a 12×12 px y ampliada con filtro: se calcula una vez por canción y no cuesta nada por fotograma.
+- Casi sin sondeo: la música se actualiza por avisos del servicio y de la sesión multimedia; desde la 3.1.0 no hay reloj ni
+  receptores de Bluetooth/Wi‑Fi propios (lo hace la barra del sistema). La única excepción es un refresco de 1 s de la barra de progreso de apps de terceros,
   y solo mientras suena algo y el inicio está visible.
-- Medido en un JCAC10003: **PSS ≈ 26 MB**, heap Java ≈ 1,7 MB, 29 apps escaneadas en ≈ 0,2 s.
+- Medido en un JCAC10003 con la 3.0.0: **PSS ≈ 26 MB**, heap Java ≈ 1,7 MB, 29 apps escaneadas en ≈ 0,2 s.
 
 ## Cómo se integra con el estéreo
 
@@ -125,11 +141,12 @@ src/com/android/launcher3/
   AppsRepository.java       lista de apps y caché de iconos (hilo de fondo)
   jancar/JancarBridge.java  cliente binder de com.jancar.services
   media/SessionProbe.java   sesiones multimedia de Android para fuentes de terceros
-  ui/                       reloj, estado de Bluetooth/Wi-Fi, tarjeta de música
+  ui/MediaWidget.java       música del inicio (portada, halo, tiempos)
   DiagnosticsActivity.java  informe de memoria, servicios y registro
 res/                        layouts, vectores y textos (es/en)
 tools/                      get-tools.sh, Sign.java, Verify.java
-docs/                       capturas y su generador
+docs/screenshots, bocetos  imágenes del diseño (render) y las 20 propuestas
+docs/preview/              generadores de esas imágenes (Python + Playwright)
 ```
 
 ## Seguridad: léelo antes de instalar

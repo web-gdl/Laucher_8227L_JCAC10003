@@ -1,44 +1,66 @@
 package com.android.launcher3.ui;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.android.launcher3.Diag;
 import com.android.launcher3.R;
 import com.android.launcher3.jancar.MediaState;
 
-/** Pinta el estado multimedia en la tarjeta. Sin temporizadores: solo redibuja cuando el servicio avisa. */
+/**
+ * Pinta el estado multimedia del inicio nocturno: portada redonda, halo de color detrás,
+ * título, artista, progreso y tiempos. Sin temporizadores propios: solo redibuja cuando le avisan.
+ *
+ * El halo es la portada reducida a {@link #HALO_PX}x{@link #HALO_PX} píxeles y ampliada con
+ * filtrado bilineal: parece un desenfoque fuerte pero cuesta un único escalado por portada
+ * (unos cientos de bytes), nada por fotograma.
+ */
 public final class MediaWidget {
-    private final View card;
+    private static final int HALO_PX = 12;
+
+    private final Context ctx;
     private final ImageView cover;
+    private final ImageView halo;
     private final TextView source;
     private final TextView title;
     private final TextView artist;
     private final ProgressBar progress;
-    private final TextView time;
+    private final View times;
+    private final TextView pos;
+    private final TextView dur;
     private final ImageButton play;
     private final int dimColor;
+    private final int coverPad;
     private final StringBuilder sb = new StringBuilder(16);
     private Bitmap shownCover;
+    private Bitmap haloBitmap;
     private boolean lastPlaying;
-    private int lastType = Integer.MIN_VALUE;
     private boolean lastOnline = true;
 
-    public MediaWidget(View card) {
-        this.card = card;
-        cover = card.findViewById(R.id.media_cover);
-        source = card.findViewById(R.id.media_source);
-        title = card.findViewById(R.id.media_title);
-        artist = card.findViewById(R.id.media_artist);
-        progress = card.findViewById(R.id.media_progress);
-        time = card.findViewById(R.id.media_time);
-        play = card.findViewById(R.id.media_play);
-        dimColor = card.getContext().getColor(R.color.text_dim);
-        title.setSelected(true); // marquee
+    public MediaWidget(View root, ImageView halo) {
+        ctx = root.getContext();
+        this.halo = halo;
+        cover = root.findViewById(R.id.media_cover);
+        source = root.findViewById(R.id.media_source);
+        title = root.findViewById(R.id.media_title);
+        artist = root.findViewById(R.id.media_artist);
+        progress = root.findViewById(R.id.media_progress);
+        times = root.findViewById(R.id.media_times);
+        pos = root.findViewById(R.id.media_pos);
+        dur = root.findViewById(R.id.media_dur);
+        play = root.findViewById(R.id.media_play);
+        dimColor = ctx.getColor(R.color.text_dim);
+        coverPad = ctx.getResources().getDimensionPixelSize(R.dimen.cover_size) / 3;
+        cover.setClipToOutline(true); // recorta la portada al óvalo del fondo
+        title.setSelected(true);       // marquee
+        setCover(null);
     }
 
     public void render(MediaState s, boolean online) {
@@ -48,8 +70,7 @@ public final class MediaWidget {
                 title.setText(R.string.media_idle);
                 artist.setText("");
                 setCover(null);
-                progress.setProgress(0);
-                time.setText("");
+                showProgress(false);
                 setPlaying(false);
                 lastOnline = false;
             }
@@ -57,53 +78,73 @@ public final class MediaWidget {
         }
         lastOnline = true;
 
-        if (s.type != lastType) {
-            lastType = s.type;
-            source.setText(sourceLabel(s.type));
-        }
         if (s.hasContent()) {
+            source.setText(ctx.getString(R.string.media_now_playing) + " · " + ctx.getString(sourceLabel(s.type)));
             title.setText(s.title);
-            artist.setText(s.artist == null || s.artist.isEmpty() ? "" : s.artist);
+            artist.setText(s.artist == null ? "" : s.artist);
         } else {
+            source.setText(sourceLabel(s.type));
             title.setText(R.string.media_idle);
             artist.setText(R.string.media_open_hint);
         }
         setCover(s.cover);
         setPlaying(s.isPlaying());
 
-        if (s.duration > 0 && s.type != MediaState.TYPE_RADIO) {
-            progress.setVisibility(View.VISIBLE);
-            time.setVisibility(View.VISIBLE);
-            progress.setProgress((int) (1000L * Math.max(0, Math.min(s.position, s.duration)) / s.duration));
-            sb.setLength(0);
-            appendTime(sb, s.position).append(" / ");
-            appendTime(sb, s.duration);
-            time.setText(sb);
+        if (s.hasContent() && s.duration > 0 && s.type != MediaState.TYPE_RADIO) {
+            showProgress(true);
+            int p = Math.max(0, Math.min(s.position, s.duration));
+            progress.setProgress((int) (1000L * p / s.duration));
+            sb.setLength(0); pos.setText(appendTime(sb, p));
+            sb.setLength(0); dur.setText(appendTime(sb, s.duration));
         } else {
-            progress.setVisibility(View.INVISIBLE);
-            time.setVisibility(View.INVISIBLE);
+            showProgress(false);
         }
+    }
+
+    /** Libera el halo (bitmap propio). La portada es del puente y la recicla él. */
+    public void release() {
+        halo.setImageDrawable(null);
+        if (haloBitmap != null && !haloBitmap.isRecycled()) haloBitmap.recycle();
+        haloBitmap = null;
+    }
+
+    private void showProgress(boolean show) {
+        int v = show ? View.VISIBLE : View.INVISIBLE;
+        if (progress.getVisibility() != v) { progress.setVisibility(v); times.setVisibility(v); }
     }
 
     private void setCover(Bitmap b) {
         if (b == shownCover && b != null) return;
         shownCover = b;
+        Bitmap oldHalo = haloBitmap;
+        haloBitmap = null;
         if (b == null || b.isRecycled()) {
             cover.setImageResource(R.drawable.ic_music_note);
             cover.setImageTintList(ColorStateList.valueOf(dimColor));
-            cover.setPadding(28, 28, 28, 28);
+            cover.setPadding(coverPad, coverPad, coverPad, coverPad);
+            halo.setImageDrawable(null);
         } else {
             cover.setImageTintList(null);
             cover.setPadding(0, 0, 0, 0);
             cover.setImageBitmap(b);
+            try {
+                haloBitmap = Bitmap.createScaledBitmap(b, HALO_PX, HALO_PX, true);
+                BitmapDrawable d = new BitmapDrawable(ctx.getResources(), haloBitmap);
+                d.setFilterBitmap(true);
+                halo.setImageDrawable(d);
+            } catch (RuntimeException | OutOfMemoryError e) {
+                Diag.warn("media", "halo", e);
+                halo.setImageDrawable(null);
+            }
         }
+        if (oldHalo != null && oldHalo != haloBitmap && !oldHalo.isRecycled()) oldHalo.recycle();
     }
 
     private void setPlaying(boolean playing) {
         if (playing == lastPlaying && play.getDrawable() != null) return;
         lastPlaying = playing;
         play.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
-        play.setContentDescription(card.getContext().getString(playing ? R.string.pause : R.string.play));
+        play.setContentDescription(ctx.getString(playing ? R.string.pause : R.string.play));
     }
 
     private static int sourceLabel(int type) {

@@ -10,11 +10,11 @@
     <dimen name="date_size">22sp</dimen>
     <dimen name="status_icon">26dp</dimen>
 
-    <dimen name="cover_size">112dp</dimen>
-    <dimen name="media_title">22sp</dimen>
-    <dimen name="media_artist">17sp</dimen>
-    <dimen name="media_btn">56dp</dimen>
-    <dimen name="media_icon">30dp</dimen>
+    <dimen name="cover_size">170dp</dimen>
+    <dimen name="media_title">40sp</dimen>
+    <dimen name="media_artist">22sp</dimen>
+    <dimen name="media_btn">72dp</dimen>
+    <dimen name="media_icon">34dp</dimen>
 
     <dimen name="fav_icon">72dp</dimen>
     <dimen name="fav_label">15sp</dimen>
@@ -24,4 +24,14 @@
     <dimen name="bar_height">64dp</dimen>
     <dimen name="bar_icon">28dp</dimen>
     <dimen name="bar_text">15sp</dimen>
+
+    <!-- Inicio nocturno -->
+    <dimen name="media_text_width">430dp</dimen>
+    <dimen name="media_btn_main">92dp</dimen>
+    <dimen name="halo_size">620dp</dimen>
+    <dimen name="halo_radius">310dp</dimen>
+    <dimen name="halo_offset">-150dp</dimen>
+    <dimen name="ring_cell">96dp</dimen>
+    <dimen name="ring_size">76dp</dimen>
+    <dimen name="ring_icon">44dp</dimen>
 </resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Un acceso del dock: icono dentro de un anillo y nombre a dos líneas -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="@dimen/ring_cell"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="7dp"
+    android:layout_marginEnd="7dp"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="@drawable/ring_cell_bg">
+
+    <FrameLayout
+        android:id="@+id/ring"
+        android:layout_width="@dimen/ring_size"
+        android:layout_height="@dimen/ring_size"
+        android:background="@drawable/ring_bg">
+
+        <ImageView
+            android:id="@+id/icon"
+            android:layout_width="@dimen/ring_icon"
+            android:layout_height="@dimen/ring_icon"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textColor="@color/text_dim"
+        android:textSize="13sp"
+        android:maxLines="2"
+        android:lineSpacingMultiplier="0.95"
+        android:ellipsize="end" />
+</LinearLayout>

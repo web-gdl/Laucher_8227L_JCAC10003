@@ -13,4 +13,7 @@
     <color name="warn">#FFEF5350</color>
     <color name="ripple">#33FFFFFF</color>
     <color name="scrim">#CC0B0D11</color>
+    <!-- Inicio nocturno: negro puro (se une con la barra del sistema) y blanco suave -->
+    <color name="night">#FF000000</color>
+    <color name="ink">#FFD9DEE7</color>
 </resources>

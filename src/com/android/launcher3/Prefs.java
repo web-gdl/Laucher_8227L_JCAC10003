@@ -19,7 +19,8 @@ public final class Prefs {
 
     /** Paquete de la app de música de fábrica (IVISystem.PACKAGE_MUSIC en el SDK Jancar). */
     public static final String DEFAULT_MEDIA_APP = "com.jancar.music";
-    public static final int MAX_FAVORITES = 8;
+    /** Huecos del dock del inicio. */
+    public static final int MAX_FAVORITES = 6;
 
     private final SharedPreferences sp;
 

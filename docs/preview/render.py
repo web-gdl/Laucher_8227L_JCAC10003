@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Genera las imágenes de docs/screenshots/ a 1024x600 (la pantalla del 8227L).
+Genera docs/screenshots/04-diagnostico.png a 1024x600 (el inicio y el panel de apps: nocturno.py) (la pantalla del 8227L).
 
 IMPORTANTE: no son capturas del equipo. Son un render del diseño: el mismo layout, colores,
 medidas (1 dp = 1 px, como en la pantalla de referencia) y vectores que res/ del proyecto,
@@ -193,9 +193,7 @@ Sesiones multimedia: activa · 2 sesiones vistas, 5 cambios
 
 
 SHOTS = {
-    "01-inicio-reproduciendo": home(True),
-    "02-inicio-reposo": home(False),
-    "03-todas-las-apps": apps_panel(),
+    # 01-03 los genera nocturno.py (inicio actual); aquí queda la pantalla de diagnóstico
     "04-diagnostico": diag(),
 }
 

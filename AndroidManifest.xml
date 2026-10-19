@@ -7,17 +7,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.launcher3"
     android:sharedUserId="android.uid.system"
-    android:versionCode="2021"
-    android:versionName="3.0.0-nativo">
+    android:versionCode="2022"
+    android:versionName="3.1.0-nativo">
 
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="27" />
 
     <!-- Para los Settings.Global que SystemUI de Jancar consulta -->
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
-    <!-- Estado Bluetooth / Wi-Fi en la barra de estado propia -->
-    <uses-permission android:name="android.permission.BLUETOOTH" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Desinstalar apps desde el menú contextual -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Permiso de firma: lista las sesiones multimedia (solo lo concede la firma de plataforma) -->

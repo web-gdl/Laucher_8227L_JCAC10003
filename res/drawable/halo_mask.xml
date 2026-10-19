@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Funde el halo con el fondo negro: centro transparente, borde negro -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="oval">
+    <gradient android:type="radial" android:gradientRadius="@dimen/halo_radius"
+        android:startColor="#00000000" android:centerColor="#99000000" android:endColor="#FF000000" />
+</shape>

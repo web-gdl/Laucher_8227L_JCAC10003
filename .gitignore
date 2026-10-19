@@ -4,3 +4,4 @@ tools/aapt2
 tools/*.jar
 tools/platform.*
 *.apk
+__pycache__/

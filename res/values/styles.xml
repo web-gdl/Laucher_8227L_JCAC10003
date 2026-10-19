@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Launcher" parent="@android:style/Theme.Material.NoActionBar">
-        <item name="android:windowBackground">@color/bg</item>
+        <item name="android:windowBackground">@color/night</item>
         <item name="android:colorBackground">@color/bg</item>
         <item name="android:colorPrimary">@color/surface</item>
         <item name="android:colorPrimaryDark">@color/bg</item>
@@ -46,9 +46,18 @@
     <style name="MediaButton">
         <item name="android:layout_width">@dimen/media_btn</item>
         <item name="android:layout_height">@dimen/media_btn</item>
-        <item name="android:padding">13dp</item>
+        <item name="android:padding">19dp</item>
         <item name="android:scaleType">fitCenter</item>
         <item name="android:background">@drawable/round_button_bg</item>
+        <item name="android:tint">@color/text</item>
+    </style>
+
+    <style name="HeaderButton">
+        <item name="android:layout_width">56dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:padding">15dp</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="android:background">@drawable/header_button_bg</item>
         <item name="android:tint">@color/text</item>
     </style>
 </resources>

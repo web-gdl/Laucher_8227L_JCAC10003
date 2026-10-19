@@ -50,4 +50,6 @@
     <string name="diag_save">Guardar informe</string>
     <string name="diag_saved">Informe guardado en %1$s</string>
     <string name="diag_save_failed">No se pudo guardar el informe</string>
+    <string name="media_now_playing">Ahora suena</string>
+    <string name="all_apps_short">Todas</string>
 </resources>

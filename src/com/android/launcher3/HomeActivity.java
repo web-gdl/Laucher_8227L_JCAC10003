@@ -13,28 +13,28 @@ import android.provider.Settings;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.launcher3.jancar.JancarBridge;
 import com.android.launcher3.jancar.MediaState;
 import com.android.launcher3.media.SessionProbe;
-import com.android.launcher3.ui.ClockController;
 import com.android.launcher3.ui.MediaWidget;
-import com.android.launcher3.ui.StatusController;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 /**
- * Única pantalla: inicio (reloj, música, favoritos, barra) y el panel de todas las apps,
- * que es una vista superpuesta dentro de la misma Activity (sin segunda Activity ni animaciones).
+ * Única pantalla: inicio «nocturno» (música al centro + dock de favoritos) y el panel de todas las
+ * apps, que es una vista superpuesta dentro de la misma Activity (sin segunda Activity ni animaciones).
+ *
+ * La hora y el estado (Wi-Fi, Bluetooth, GPS, USB) no se dibujan: ya los muestra la barra del sistema.
  */
 public final class HomeActivity extends Activity implements AppsRepository.Listener, JancarBridge.Listener, SessionProbe.Listener {
 
@@ -45,20 +45,17 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     private View homeRoot;
     private View appsPanel;
-    private GridView favGrid;
+    private LinearLayout dock;
     private GridView appsGrid;
     private TextView appsCount;
     private ImageView btnToggleHidden;
-    private ClockController clock;
-    private StatusController status;
     private MediaWidget mediaWidget;
-    private FavAdapter favAdapter;
     private AppsAdapter appsAdapter;
 
     private List<String> favKeys;
     private Set<String> hidden;
     private boolean showHidden;
-    private int favIconPx;
+    private int ringIconPx;
     private int appIconPx;
     private boolean globalsWritten;
     private boolean resumed;
@@ -78,31 +75,21 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         favKeys = new ArrayList<>(prefs.getFavorites());
         hidden = prefs.getHidden();
         showHidden = prefs.getShowHidden();
-        favIconPx = getResources().getDimensionPixelSize(R.dimen.fav_icon);
+        ringIconPx = getResources().getDimensionPixelSize(R.dimen.ring_icon);
         appIconPx = getResources().getDimensionPixelSize(R.dimen.app_icon);
 
         setContentView(R.layout.activity_home);
         homeRoot = findViewById(R.id.home_root);
         appsPanel = findViewById(R.id.apps_panel);
-        favGrid = findViewById(R.id.fav_grid);
+        dock = findViewById(R.id.dock);
         appsGrid = findViewById(R.id.apps_grid);
         appsCount = findViewById(R.id.apps_count);
         btnToggleHidden = findViewById(R.id.btn_toggle_hidden);
 
-        clock = new ClockController(this, (TextView) findViewById(R.id.clock), (TextView) findViewById(R.id.date));
-        status = new StatusController(this, (ImageView) findViewById(R.id.status_bt), (ImageView) findViewById(R.id.status_wifi),
-                (TextView) findViewById(R.id.status_text));
         View mediaCard = findViewById(R.id.media_card);
-        mediaWidget = new MediaWidget(mediaCard);
+        mediaWidget = new MediaWidget(homeRoot, (ImageView) findViewById(R.id.halo));
 
-        favAdapter = new FavAdapter();
-        favGrid.setAdapter(favAdapter);
-        favGrid.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
-            @Override public void onLayoutChange(View v, int l, int t, int r, int b, int ol, int ot, int or, int ob) {
-                int h = b - t;
-                if (h > 0 && h != (ob - ot)) favAdapter.setRowHeight((h - favGrid.getVerticalSpacing()) / 2);
-            }
-        });
+        buildDock();
         appsAdapter = new AppsAdapter();
         appsGrid.setAdapter(appsAdapter);
         appsGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -125,7 +112,6 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         findViewById(R.id.media_next).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaNext(); } });
         findViewById(R.id.media_prev).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaPrev(); } });
 
-        findViewById(R.id.btn_all_apps).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showApps(); } });
         findViewById(R.id.btn_screen_off).setOnClickListener(new View.OnClickListener() {
             @Override public void onClick(View v) {
                 if (!bridge.screenOff()) Toast.makeText(HomeActivity.this, R.string.media_service_offline, Toast.LENGTH_SHORT).show();
@@ -159,18 +145,15 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         super.onResume();
         resumed = true;
         bridge.setHomeVisible(true);
-        clock.start();
-        status.start();
         bridge.requestMediaState();
         writeSystemUiGlobals();
+        renderMedia();
     }
 
     @Override protected void onPause() {
         resumed = false;
         ticker.removeCallbacks(tick);
         bridge.setHomeVisible(false);
-        clock.stop();
-        status.stop();
         super.onPause();
     }
 
@@ -179,6 +162,11 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         bridge.removeListener(this);
         sessions.removeListener(this);
         super.onStop();
+    }
+
+    @Override protected void onDestroy() {
+        mediaWidget.release();
+        super.onDestroy();
     }
 
     @Override protected void onNewIntent(Intent intent) {
@@ -230,15 +218,19 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     // ------------------------------------------------------------------ AppsRepository.Listener
 
     @Override public void onAppsChanged(List<AppEntry> list) {
-        favAdapter.rebuild();
+        rebuildDock();
         if (appsPanel.getVisibility() == View.VISIBLE) refreshApps();
     }
 
-    // ------------------------------------------------------------------ JancarBridge.Listener
+    // ------------------------------------------------------------------ JancarBridge / SessionProbe
 
     @Override public void onMediaChanged(MediaState state) { renderMedia(); }
 
     @Override public void onServicesChanged() { renderMedia(); }
+
+    @Override public void onAccChanged(boolean on) { /* el servicio apaga la pantalla; nada que hacer aquí */ }
+
+    @Override public void onCcdChanged(int status) { /* la cámara la dibuja el sistema */ }
 
     @Override public void onSessionChanged(SessionProbe probe) { renderMedia(); }
 
@@ -267,9 +259,69 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         if (resumed && m.fromSession && m.isPlaying() && m.duration > 0) ticker.postDelayed(tick, 1000);
     }
 
-    @Override public void onAccChanged(boolean on) { /* el servicio apaga la pantalla; nada que hacer aquí */ }
+    // ------------------------------------------------------------------ dock
 
-    @Override public void onCcdChanged(int status) { /* la cámara la dibuja el sistema */ }
+    private static final class Ring {
+        View root; ImageView icon; TextView label;
+    }
+
+    private final Ring[] rings = new Ring[Prefs.MAX_FAVORITES];
+
+    /** Crea una vez las 6 celdas de favoritos y la de «Todas». */
+    private void buildDock() {
+        LayoutInflater inf = LayoutInflater.from(this);
+        for (int i = 0; i < rings.length; i++) {
+            Ring r = new Ring();
+            r.root = inf.inflate(R.layout.item_ring, dock, false);
+            r.icon = r.root.findViewById(R.id.icon);
+            r.label = r.root.findViewById(R.id.label);
+            rings[i] = r;
+            dock.addView(r.root);
+        }
+        View all = inf.inflate(R.layout.item_ring, dock, false);
+        ImageView allIcon = all.findViewById(R.id.icon);
+        allIcon.setImageResource(R.drawable.ic_apps);
+        allIcon.setImageTintList(ColorStateList.valueOf(getColor(R.color.accent)));
+        int pad = getResources().getDimensionPixelSize(R.dimen.ring_icon) / 6;
+        allIcon.setPadding(pad, pad, pad, pad);
+        ((TextView) all.findViewById(R.id.label)).setText(R.string.all_apps_short);
+        all.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showApps(); } });
+        dock.addView(all);
+    }
+
+    private void rebuildDock() {
+        int n = 0;
+        AppEntry[] slots = new AppEntry[rings.length];
+        for (String k : favKeys) {
+            AppEntry e = apps.resolve(k);
+            if (e != null && n < slots.length) slots[n++] = e;
+        }
+        int pad = ringIconPx / 6;
+        for (int i = 0; i < rings.length; i++) {
+            final Ring r = rings[i];
+            final AppEntry e = slots[i];
+            if (e == null) {
+                r.icon.setTag(null);
+                r.icon.setImageResource(R.drawable.ic_add);
+                r.icon.setImageTintList(ColorStateList.valueOf(getColor(R.color.text_dim)));
+                r.icon.setPadding(pad, pad, pad, pad);
+                r.icon.setAlpha(1f);
+                r.label.setText(R.string.empty_slot);
+                r.root.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showApps(); } });
+                r.root.setOnLongClickListener(null);
+            } else {
+                r.icon.setImageTintList(null);
+                r.icon.setPadding(0, 0, 0, 0);
+                r.icon.setAlpha(0.9f); // icono a color, apenas atenuado para la noche
+                r.label.setText(e.label);
+                apps.bindIcon(e, r.icon, ringIconPx);
+                r.root.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { apps.launch(HomeActivity.this, e); } });
+                r.root.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override public boolean onLongClick(View v) { showAppMenu(e, true); return true; }
+                });
+            }
+        }
+    }
 
     // ------------------------------------------------------------------ acciones
 
@@ -373,7 +425,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         resolved.add(e.key);
         favKeys = resolved;
         prefs.setFavorites(favKeys);
-        favAdapter.rebuild();
+        rebuildDock();
         Toast.makeText(this, e.label, Toast.LENGTH_SHORT).show();
     }
 
@@ -382,79 +434,13 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         for (String k : favKeys) { AppEntry r = apps.resolve(k); if (r != null && !r.key.equals(e.key)) resolved.add(r.key); }
         favKeys = resolved;
         prefs.setFavorites(favKeys);
-        favAdapter.rebuild();
+        rebuildDock();
     }
 
-    // ------------------------------------------------------------------ adaptadores
+    // ------------------------------------------------------------------ adaptador del panel de apps
 
     private static final class Holder {
         ImageView icon; TextView label; AppEntry entry;
-    }
-
-    /** 8 huecos fijos (4×2). Un hueco vacío abre "todas las apps". */
-    private final class FavAdapter extends BaseAdapter {
-        private final AppEntry[] slots = new AppEntry[Prefs.MAX_FAVORITES];
-        private int rowHeight;
-
-        void rebuild() {
-            int n = 0;
-            for (String k : favKeys) {
-                AppEntry e = apps.resolve(k);
-                if (e != null && n < slots.length) slots[n++] = e;
-            }
-            for (int i = n; i < slots.length; i++) slots[i] = null;
-            notifyDataSetChanged();
-        }
-
-        void setRowHeight(int h) {
-            if (h > 0 && h != rowHeight) { rowHeight = h; notifyDataSetChanged(); }
-        }
-
-        @Override public int getCount() { return slots.length; }
-        @Override public AppEntry getItem(int pos) { return slots[pos]; }
-        @Override public long getItemId(int pos) { return pos; }
-        @Override public boolean hasStableIds() { return true; }
-
-        @Override public View getView(final int pos, View convert, ViewGroup parent) {
-            Holder h;
-            if (convert == null) {
-                convert = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_fav, parent, false);
-                h = new Holder();
-                h.icon = convert.findViewById(R.id.icon);
-                h.label = convert.findViewById(R.id.label);
-                convert.setTag(h);
-            } else {
-                h = (Holder) convert.getTag();
-            }
-            if (rowHeight > 0) {
-                ViewGroup.LayoutParams lp = convert.getLayoutParams();
-                if (lp == null) lp = new AbsListView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, rowHeight);
-                if (lp.height != rowHeight) { lp.height = rowHeight; convert.setLayoutParams(lp); }
-            }
-            final AppEntry e = slots[pos];
-            h.entry = e;
-            if (e == null) {
-                convert.setBackgroundResource(R.drawable.tile_empty_bg);
-                h.icon.setTag(null);
-                h.icon.setImageResource(R.drawable.ic_add);
-                h.icon.setImageTintList(ColorStateList.valueOf(getColor(R.color.text_dim)));
-                h.label.setText(R.string.empty_slot);
-                h.label.setTextColor(getColor(R.color.text_dim));
-                convert.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showApps(); } });
-                convert.setOnLongClickListener(null);
-            } else {
-                convert.setBackgroundResource(R.drawable.tile_bg);
-                h.icon.setImageTintList(null);
-                h.label.setText(e.label);
-                h.label.setTextColor(getColor(R.color.text));
-                apps.bindIcon(e, h.icon, favIconPx);
-                convert.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { apps.launch(HomeActivity.this, e); } });
-                convert.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override public boolean onLongClick(View v) { showAppMenu(e, true); return true; }
-                });
-            }
-            return convert;
-        }
     }
 
     private final class AppsAdapter extends BaseAdapter {
