@@ -77,7 +77,8 @@ public final class DiagnosticsActivity extends Activity {
         sb.append("App de memoria (servicio): ").append(String.valueOf(bridge.getMemoryAppPackage())).append('\n');
         sb.append("Último evento: ").append(bridge.getLastEvent()).append('\n');
         sb.append("Media: ").append(bridge.getMedia()).append('\n');
-        sb.append("Sesiones multimedia: ").append(app.sessions().describe()).append("\n\n");
+        sb.append("Sesiones multimedia: ").append(app.sessions().describe()).append('\n');
+        sb.append("Memoria de música: ").append(app.memory().describe()).append("\n\n");
 
         sb.append("== Registro ==\n").append(Diag.dump());
         return sb.toString();

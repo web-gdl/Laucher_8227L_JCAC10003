@@ -24,6 +24,17 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 > no la dibuja el launcher. Se regeneran con [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
 > [`docs/preview/render.py`](docs/preview/render.py). ¿Tienes capturas reales de tu estéreo? Se aceptan con gusto.
 
+### Novedades de la 3.3.0: la música vuelve al encender el auto
+
+- Al **arrancar el estéreo**, 6 s después (como el launcher de fábrica), se vuelve a abrir la **última app de música**
+  con `boot_memory=true`; RadilloPlayerWave y la música de fábrica restauran su cola y siguen sonando si sonaban.
+  La variante de reemplazo se lo pide al servicio (`openMemoryApp`); la de prueba abre la app ella misma, porque el
+  servicio solo atiende esa petición si viene del launcher de fábrica.
+- Al **despertar** (llave en ACC tras haberla quitado), si antes sonaba algo y a los 6 s no ha vuelto, se reabre la app.
+  Solo si estás en la pantalla de inicio, para no tapar la navegación.
+- El widget **recuerda la última canción**: si no hay fuente activa la muestra con «Última canción · toca ▶ para seguir».
+- Diagnóstico: nueva línea «Memoria de música» con la última canción, la app y la última acción tomada.
+
 ### Novedades de la 3.2.0: fondo con los colores de la portada
 
 - El fondo ocupa **toda la pantalla** y se pinta con los **colores de la portada muy difuminados**, no con la imagen.

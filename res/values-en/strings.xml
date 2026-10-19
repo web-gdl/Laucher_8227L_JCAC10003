@@ -42,4 +42,5 @@
     <string name="diag_save_failed">Could not save the report</string>
     <string name="media_now_playing">Now playing</string>
     <string name="all_apps_short">All</string>
+    <string name="media_last">Last song · tap ▶ to resume</string>
 </resources>

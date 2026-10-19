@@ -23,6 +23,7 @@ import android.widget.Toast;
 
 import com.android.launcher3.jancar.JancarBridge;
 import com.android.launcher3.jancar.MediaState;
+import com.android.launcher3.media.MediaMemory;
 import com.android.launcher3.media.SessionProbe;
 import com.android.launcher3.ui.MediaWidget;
 
@@ -42,6 +43,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private AppsRepository apps;
     private JancarBridge bridge;
     private SessionProbe sessions;
+    private MediaMemory memory;
 
     private View homeRoot;
     private View appsPanel;
@@ -72,6 +74,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         apps = app.apps();
         bridge = app.bridge();
         sessions = app.sessions();
+        memory = app.memory();
         favKeys = new ArrayList<>(prefs.getFavorites());
         hidden = prefs.getHidden();
         showHidden = prefs.getShowHidden();
@@ -108,7 +111,13 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
         mediaCard.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { openMediaApp(); } });
         mediaCard.setOnLongClickListener(new View.OnLongClickListener() { @Override public boolean onLongClick(View v) { chooseMediaApp(); return true; } });
-        findViewById(R.id.media_play).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaPlayPause(); } });
+        findViewById(R.id.media_play).setOnClickListener(new View.OnClickListener() {
+            @Override public void onClick(View v) {
+                // Sin fuente activa pero con última canción: reabrir su app (ella sigue donde iba).
+                if (!bridge.getMedia().hasContent() && memory.hasLast() && memory.openApp("toque play")) return;
+                bridge.mediaPlayPause();
+            }
+        });
         findViewById(R.id.media_next).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaNext(); } });
         findViewById(R.id.media_prev).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaPrev(); } });
 
@@ -254,7 +263,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
             m.fromSession = false;
             if (!m.isThirdParty()) m.sourcePackage = null;
         }
-        mediaWidget.render(m, bridge.isMediaOnline());
+        if (!m.hasContent() && memory.hasLast()) mediaWidget.renderLast(memory.getTitle(), memory.getArtist());
+        else mediaWidget.render(m, bridge.isMediaOnline());
         ticker.removeCallbacks(tick);
         if (resumed && m.fromSession && m.isPlaying() && m.duration > 0) ticker.postDelayed(tick, 1000);
     }
@@ -329,6 +339,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         String pkg;
         MediaState cur = bridge.getMedia();
         if (cur.isThirdParty() && cur.sourcePackage != null && apps.launchPackage(this, cur.sourcePackage)) return;
+        if (!cur.hasContent() && memory.hasLast() && memory.openApp("toque portada")) return;
         switch (cur.type) {
             case MediaState.TYPE_A2DP: pkg = "com.jancar.bluetooth"; break;
             case MediaState.TYPE_RADIO: pkg = "com.jancar.radio"; break;

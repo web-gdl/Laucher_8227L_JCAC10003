@@ -112,6 +112,20 @@ public final class MediaWidget {
         }
     }
 
+    /**
+     * Sin fuente activa: muestra la última canción conocida (atenuada, en pausa) para tocar y seguir.
+     * El fondo de colores se conserva.
+     */
+    public void renderLast(String lastTitle, String lastArtist) {
+        lastOnline = true;
+        source.setText(R.string.media_last);
+        title.setText(lastTitle);
+        artist.setText(lastArtist == null ? "" : lastArtist);
+        setCover(null);
+        setPlaying(false);
+        showProgress(false);
+    }
+
     /** Suelta el fondo (bitmap propio de ~9 KB). La portada es del puente y la recicla él. */
     public void release() {
         backdrop.setImageDrawable(null);

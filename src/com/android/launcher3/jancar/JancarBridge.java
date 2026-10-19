@@ -184,6 +184,8 @@ public final class JancarBridge {
             if (!i.hasExtra("acc")) return;
             accBroadcast = i.getBooleanExtra("acc", true);
             Diag.log("car", "broadcast acc=" + accBroadcast + " (servicio dice " + (accKnown ? accOn : "?") + ")");
+            // El broadcast llega aunque el callback del servicio no: también se avisa (los oyentes toleran duplicados).
+            for (Listener l : new ArrayList<>(listeners)) l.onAccChanged(accBroadcast);
         }
     };
 

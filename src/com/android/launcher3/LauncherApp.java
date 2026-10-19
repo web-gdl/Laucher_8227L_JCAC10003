@@ -2,11 +2,10 @@ package com.android.launcher3;
 
 import android.app.Application;
 import android.content.ComponentCallbacks2;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.SystemClock;
 
 import com.android.launcher3.jancar.JancarBridge;
+import com.android.launcher3.media.MediaMemory;
 import com.android.launcher3.media.SessionProbe;
 
 import java.io.File;
@@ -18,16 +17,14 @@ import java.io.PrintWriter;
  * preferencias, repositorio de apps (con su hilo de fondo) y el puente a com.jancar.services.
  */
 public final class LauncherApp extends Application {
-    /** Igual que el launcher de fábrica: 6 s tras arrancar pide al servicio reabrir la última app multimedia. */
-    private static final long MEMORY_APP_DELAY_MS = 6000;
 
     private static LauncherApp instance;
     private Prefs prefs;
     private AppsRepository apps;
     private JancarBridge bridge;
     private SessionProbe sessions;
+    private MediaMemory memory;
     private final long startedAt = SystemClock.elapsedRealtime();
-    private boolean memoryAppRequested;
 
     public static LauncherApp get() { return instance; }
 
@@ -42,19 +39,10 @@ public final class LauncherApp extends Application {
         bridge.start();
         sessions = new SessionProbe(this);
         sessions.start();
+        memory = new MediaMemory(this, bridge, sessions);
         apps.refresh();
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override public void run() { maybeOpenMemoryApp(); }
-        }, MEMORY_APP_DELAY_MS);
-    }
-
-    private void maybeOpenMemoryApp() {
-        if (memoryAppRequested) return;
-        memoryAppRequested = true;
-        // El launcher de fábrica solo lo pide si él mismo está en primer plano (es decir, arranque normal).
-        if (!BuildInfo.isReplacement(this)) Diag.log("system", "openMemoryApp omitido: variante de prueba");
-        else if (bridge.isHomeVisible()) bridge.openMemoryApp();
-        else Diag.log("system", "openMemoryApp omitido: launcher no visible");
+        // Como el de fábrica: 6 s tras arrancar el estéreo, reabrir la última app de música.
+        memory.scheduleBoot();
     }
 
     public Prefs prefs() { return prefs; }
@@ -64,6 +52,8 @@ public final class LauncherApp extends Application {
     public JancarBridge bridge() { return bridge; }
 
     public SessionProbe sessions() { return sessions; }
+
+    public MediaMemory memory() { return memory; }
 
     public long uptimeMs() { return SystemClock.elapsedRealtime() - startedAt; }
 

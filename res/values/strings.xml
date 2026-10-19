@@ -52,4 +52,5 @@
     <string name="diag_save_failed">No se pudo guardar el informe</string>
     <string name="media_now_playing">Ahora suena</string>
     <string name="all_apps_short">Todas</string>
+    <string name="media_last">Última canción · toca ▶ para seguir</string>
 </resources>
