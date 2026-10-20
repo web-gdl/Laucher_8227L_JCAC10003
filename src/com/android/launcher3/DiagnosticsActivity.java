@@ -52,7 +52,20 @@ public final class DiagnosticsActivity extends Activity {
                 used / 1048576f, rt.totalMemory() / 1048576f, rt.maxMemory() / 1048576f));
         sb.append(String.format(Locale.US, "Heap nativo: %.1f MB\n", Debug.getNativeHeapAllocatedSize() / 1048576f));
         try {
-            sb.append(String.format(Locale.US, "PSS total del proceso: %.1f MB\n", Debug.getPss() / 1024f));
+            Debug.MemoryInfo mi = new Debug.MemoryInfo();
+            Debug.getMemoryInfo(mi);
+            sb.append(String.format(Locale.US, "PSS total del proceso: %.1f MB\n", mi.getTotalPss() / 1024f));
+            sb.append("  desglose: ");
+            String[][] parts = {{"summary.java-heap", "Java"}, {"summary.native-heap", "nativo"}, {"summary.graphics", "gráficos"},
+                    {"summary.code", "código"}, {"summary.stack", "pila"}, {"summary.private-other", "otros"}, {"summary.system", "sistema"}};
+            for (int i = 0; i < parts.length; i++) {
+                String v = mi.getMemoryStat(parts[i][0]);
+                float mb = 0f;
+                try { mb = Integer.parseInt(v) / 1024f; } catch (RuntimeException ignored) {}
+                if (i > 0) sb.append(" · ");
+                sb.append(parts[i][1]).append(' ').append(String.format(Locale.US, "%.1f", mb));
+            }
+            sb.append(" MB\n");
         } catch (RuntimeException ignored) {}
         ActivityManager am = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {

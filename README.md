@@ -24,6 +24,13 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 > no la dibuja el launcher. Se regeneran con [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
 > [`docs/preview/render.py`](docs/preview/render.py). ¿Tienes capturas reales de tu estéreo? Se aceptan con gusto.
 
+### Novedades de la 3.3.2: memoria
+
+- Diagnóstico muestra el **desglose de la memoria** del proceso (Java, nativa, gráficos, código, pila, otros, sistema)
+  para saber qué hace subir el consumo en el equipo.
+- Menos trabajo de la GPU: la pantalla ya no se pinta de negro dos veces (lo hace solo la ventana).
+- Al cerrar el panel de aplicaciones se sueltan sus celdas; al salir del inicio se recorta la caché de iconos a la mitad.
+
 ### Novedades de la 3.3.1: corrección del encendido
 
 - El informe de Diagnóstico mostró que el estéreo no se reinicia al encender el auto: solo despierta, y el servicio

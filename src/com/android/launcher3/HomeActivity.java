@@ -170,6 +170,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         apps.removeListener(this);
         bridge.removeListener(this);
         sessions.removeListener(this);
+        // Fuera de la pantalla de inicio: deja en caché solo la mitad de los iconos (los del dock vuelven al instante).
+        apps.trimIcons(false);
         super.onStop();
     }
 
@@ -212,6 +214,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         if (appsPanel.getVisibility() != View.VISIBLE) return;
         appsPanel.setVisibility(View.GONE);
         homeRoot.setVisibility(View.VISIBLE);
+        // Suelta las celdas del panel (vistas, listas de dibujo y texturas de sus iconos); se rehacen al abrirlo.
+        appsAdapter.setItems(new ArrayList<AppEntry>());
     }
 
     private void refreshApps() {
