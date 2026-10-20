@@ -24,51 +24,24 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 > no la dibuja el launcher. Se regeneran con [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
 > [`docs/preview/render.py`](docs/preview/render.py). ¿Tienes capturas reales de tu estéreo? Se aceptan con gusto.
 
-### Novedades de la 3.3.2: memoria
+## Estado del proyecto
 
-- Diagnóstico muestra el **desglose de la memoria** del proceso (Java, nativa, gráficos, código, pila, otros, sistema)
-  para saber qué hace subir el consumo en el equipo.
-- Menos trabajo de la GPU: la pantalla ya no se pinta de negro dos veces (lo hace solo la ventana).
-- Al cerrar el panel de aplicaciones se sueltan sus celdas; al salir del inicio se recorta la caché de iconos a la mitad.
+**Versión estable: 3.3.2** (octubre de 2026). Probada por el autor en su JCAC10003 con la variante de prueba:
 
-### Novedades de la 3.3.1: corrección del encendido
+- ✅ Inicio nocturno con la música al centro, dock de favoritos y panel de aplicaciones.
+- ✅ Widget de música con apps de terceros (RadilloPlayerWave) y fondo con los colores de la portada.
+- ✅ La música vuelve al encender el auto (el estéreo despierta, no reinicia).
+- ⏳ Variante de reemplazo (`com.android.launcher3`): compila y es la misma base, pero el autor no la ha instalado.
+- ⏳ Consumo de memoria: el informe de Diagnóstico ya muestra el desglose; queda medirlo en el equipo para recortar lo que haga falta.
 
-- El informe de Diagnóstico mostró que el estéreo no se reinicia al encender el auto: solo despierta, y el servicio
-  cierra la variante de prueba al apagar. Ahora el launcher toma como «apagado» el estado con el que nace, guarda si
-  sonaba música al apagar y, al encender, **avisa a la app de memoria con el aviso de la llave dirigido a ella**
-  (`com.jancar.services.action.acc`, llega aunque la app esté cerrada). RadilloPlayerWave decide si se reabre;
-  las apps que no escuchan ese aviso se abren con `boot_memory=true`, solo si sonaban y desde la pantalla de inicio.
+**Límites conocidos**
 
-### Novedades de la 3.3.0: la música vuelve al encender el auto
+- Al apagar el auto, el servicio del estéreo cierra la variante de prueba (no está en su lista de paquetes protegidos);
+  al encender se vuelve a abrir sola como pantalla de inicio. La de reemplazo no tiene ese problema.
+- Los códigos del servicio `com.jancar.services` salen del firmware de este equipo; otro firmware podría cambiarlos.
+- Las imágenes del README son renders del diseño, no capturas.
 
-- Al **arrancar el estéreo**, 6 s después (como el launcher de fábrica), se vuelve a abrir la **última app de música**
-  con `boot_memory=true`; RadilloPlayerWave y la música de fábrica restauran su cola y siguen sonando si sonaban.
-  La variante de reemplazo se lo pide al servicio (`openMemoryApp`); la de prueba abre la app ella misma, porque el
-  servicio solo atiende esa petición si viene del launcher de fábrica.
-- Al **despertar** (llave en ACC tras haberla quitado), si antes sonaba algo y a los 6 s no ha vuelto, se reabre la app.
-  Solo si estás en la pantalla de inicio, para no tapar la navegación.
-- El widget **recuerda la última canción**: si no hay fuente activa la muestra con «Última canción · toca ▶ para seguir».
-- Diagnóstico: nueva línea «Memoria de música» con la última canción, la app y la última acción tomada.
-
-### Novedades de la 3.2.0: fondo con los colores de la portada
-
-- El fondo ocupa **toda la pantalla** y se pinta con los **colores de la portada muy difuminados**, no con la imagen.
-  Se calcula una vez por canción (una rejilla de 4×4 colores, interpolada y difuminada en un bitmap de 64×34) y cambia con un fundido.
-- Si la canción no trae portada se **conserva el último fondo**; también se recuerda al reiniciar el estéreo.
-- Sustituye al halo cuadrado de la 3.1.0, que dejaba ver los bordes y la propia imagen.
-
-### Novedades de la 3.1.0: inicio «nocturno»
-
-- **Fondo negro puro** que se une con la barra del sistema y no deslumbra de noche.
-- **La música al centro**: portada redonda de 170 dp, título grande, tiempo transcurrido y total, y botones de 72 y 92 dp.
-  Detrás, el fondo con los colores de la portada (ver 3.2.0).
-- **Sin reloj ni iconos de estado duplicados**: el estéreo ya muestra hora, Wi‑Fi, GPS, Bluetooth y USB en su barra.
-  Así se corrige también el reloj cortado («8:10 p…») de la 3.0.0 con formato de 12 horas.
-- **Dock de 6 favoritos** en anillos con el nombre a dos líneas, más «Todas» para el panel de aplicaciones.
-- Apagar pantalla, Ajustes y Diagnóstico pasan a la cabecera del panel de aplicaciones.
-- Nombres de apps a dos líneas también en el panel («Gestor de archivos» ya no se corta).
-
-El diseño se eligió entre 20 propuestas, que están en [`docs/bocetos/`](docs/bocetos/).
+El historial completo está en [`CHANGELOG.md`](CHANGELOG.md). El diseño se eligió entre 20 propuestas, que están en [`docs/bocetos/`](docs/bocetos/).
 
 ---
 
@@ -112,6 +85,9 @@ Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
   al tocar la portada o el título se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
 - **Todas las aplicaciones** en una vista superpuesta (6 columnas), con menú contextual: añadir/quitar favoritos, ocultar, información de la app y desinstalar.
   En su cabecera: mostrar ocultas, apagar pantalla, ajustes y diagnóstico. Pulsación larga en un favorito del dock para quitarlo.
+- **La música vuelve al encender el auto**: se recuerda la última canción y su app; al arrancar o despertar el estéreo,
+  la app de memoria recibe el aviso de la llave (o se abre con `boot_memory=true`) y sigue donde iba. Si no hay fuente,
+  el widget muestra «Última canción · toca ▶ para seguir».
 - **Apagar pantalla** con la misma llamada que usa el launcher de fábrica.
 - **Diagnóstico**: memoria, estado de los enlaces con el servicio del estéreo, ACC (tres fuentes para contrastarlas), cámara de reversa, sesiones multimedia y
   registro de eventos. Se puede guardar como informe de texto. Si el launcher se cierra, deja `files/crash.txt` con la pila.
@@ -126,7 +102,8 @@ Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
 - Casi sin sondeo: la música se actualiza por avisos del servicio y de la sesión multimedia; desde la 3.1.0 no hay reloj ni
   receptores de Bluetooth/Wi‑Fi propios (lo hace la barra del sistema). La única excepción es un refresco de 1 s de la barra de progreso de apps de terceros,
   y solo mientras suena algo y el inicio está visible.
-- Medido en un JCAC10003 con la 3.0.0: **PSS ≈ 26 MB**, heap Java ≈ 1,7 MB, 29 apps escaneadas en ≈ 0,2 s.
+- Medido en un JCAC10003: **PSS ≈ 26 MB** con la 3.0.0 recién abierta y ≈ 53 MB con la 3.3.0 tras un rato de uso; heap Java ≈ 2 MB.
+  El desglose de Diagnóstico (3.3.2) dirá qué parte es memoria gráfica del sistema y qué parte se puede recortar.
 
 ## Cómo se integra con el estéreo
 
@@ -137,7 +114,7 @@ estáticamente las apps de fábrica, sin ejecutarlas:
 | Servicio | Para qué se usa |
 |---|---|
 | `IMedia` | Recibir título, artista, portada y estado de la fuente activa; play‑pausa, anterior y siguiente. |
-| `ISystem` | Apagar la retroiluminación; pedir la «app de memoria» al arrancar (solo variante de reemplazo). |
+| `ISystem` | Apagar la retroiluminación; saber cuál es la «app de memoria» y pedir que se abra al arrancar (variante de reemplazo). |
 | `ICar` | Estado del ACC y de la cámara de reversa. |
 
 Se reconecta solo con `linkToDeath` y reintentos escalonados (1, 2, 5, 10 y 30 s). Los códigos de transacción salen de los stubs AIDL de
