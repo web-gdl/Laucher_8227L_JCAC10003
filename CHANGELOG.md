@@ -4,6 +4,8 @@ Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher
 
 ## 3.4.0: panel más limpio y código revisado
 
+Probada en el JCAC10003 (25-oct-2026): todo correcto.
+
 - Panel de aplicaciones **sin recuadros** detrás de los iconos: solo icono y nombre, con el efecto de toque.
 - Código revisado y refactorizado:
   - Clases anónimas de un método pasadas a lambdas (menos código y menos clases en el APK).

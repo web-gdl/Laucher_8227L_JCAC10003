@@ -26,10 +26,10 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 
 ## Estado del proyecto
 
-**Versión actual: 3.4.0** (octubre de 2026; panel más limpio y código revisado, ver [`CHANGELOG.md`](CHANGELOG.md)).
-Probado por el autor en su JCAC10003 con la variante de prueba (hasta la 3.3.1):
+**Versión estable: 3.4.0** (octubre de 2026; panel más limpio y código revisado, ver [`CHANGELOG.md`](CHANGELOG.md)).
+Probada por el autor en su JCAC10003 con la variante de prueba:
 
-- ✅ Inicio nocturno con la música al centro, dock de favoritos y panel de aplicaciones.
+- ✅ Inicio nocturno con la música al centro, dock de favoritos y panel de aplicaciones sin recuadros.
 - ✅ Widget de música con apps de terceros (RadilloPlayerWave) y fondo con los colores de la portada.
 - ✅ La música vuelve al encender el auto (el estéreo despierta, no reinicia).
 - ⏳ Variante de reemplazo (`com.android.launcher3`): compila y es la misma base, pero el autor no la ha instalado.
