@@ -47,6 +47,7 @@ public final class MediaWidget {
     private final int coverPad;
     private final StringBuilder sb = new StringBuilder(16);
     private Bitmap shownCover;
+    private boolean placeholderShown;
     private Drawable backdropDrawable;
     private String backdropPalette;
     private boolean lastPlaying;
@@ -77,9 +78,9 @@ public final class MediaWidget {
     public void render(MediaState s, boolean online) {
         if (!online) {
             if (lastOnline) {
-                source.setText(R.string.media_service_offline);
-                title.setText(R.string.media_idle);
-                artist.setText("");
+                setText(source, R.string.media_service_offline);
+                setText(title, R.string.media_idle);
+                setText(artist, "");
                 setCover(null);
                 showProgress(false);
                 setPlaying(false);
@@ -90,13 +91,13 @@ public final class MediaWidget {
         lastOnline = true;
 
         if (s.hasContent()) {
-            source.setText(ctx.getString(R.string.media_now_playing) + " · " + ctx.getString(sourceLabel(s.type)));
-            title.setText(s.title);
-            artist.setText(s.artist == null ? "" : s.artist);
+            setText(source, ctx.getString(R.string.media_now_playing) + " · " + ctx.getString(sourceLabel(s.type)));
+            setText(title, s.title);
+            setText(artist, s.artist == null ? "" : s.artist);
         } else {
-            source.setText(sourceLabel(s.type));
-            title.setText(R.string.media_idle);
-            artist.setText(R.string.media_open_hint);
+            setText(source, sourceLabel(s.type));
+            setText(title, R.string.media_idle);
+            setText(artist, R.string.media_open_hint);
         }
         setCover(s.cover);
         setPlaying(s.isPlaying());
@@ -105,8 +106,8 @@ public final class MediaWidget {
             showProgress(true);
             int p = Math.max(0, Math.min(s.position, s.duration));
             progress.setProgress((int) (1000L * p / s.duration));
-            sb.setLength(0); pos.setText(appendTime(sb, p));
-            sb.setLength(0); dur.setText(appendTime(sb, s.duration));
+            sb.setLength(0); setText(pos, appendTime(sb, p));
+            sb.setLength(0); setText(dur, appendTime(sb, s.duration));
         } else {
             showProgress(false);
         }
@@ -118,9 +119,9 @@ public final class MediaWidget {
      */
     public void renderLast(String lastTitle, String lastArtist) {
         lastOnline = true;
-        source.setText(R.string.media_last);
-        title.setText(lastTitle);
-        artist.setText(lastArtist == null ? "" : lastArtist);
+        setText(source, R.string.media_last);
+        setText(title, lastTitle);
+        setText(artist, lastArtist == null ? "" : lastArtist);
         setCover(null);
         setPlaying(false);
         showProgress(false);
@@ -138,8 +139,9 @@ public final class MediaWidget {
     }
 
     private void setCover(Bitmap b) {
-        if (b == shownCover && b != null) return;
+        if (b == shownCover && (b != null || placeholderShown)) return;
         shownCover = b;
+        placeholderShown = b == null || b.isRecycled();
         if (b == null || b.isRecycled()) {
             cover.setImageResource(R.drawable.ic_music_note);
             cover.setImageTintList(ColorStateList.valueOf(dimColor));
@@ -199,6 +201,13 @@ public final class MediaWidget {
         lastPlaying = playing;
         play.setImageResource(playing ? R.drawable.ic_pause : R.drawable.ic_play);
         play.setContentDescription(ctx.getString(playing ? R.string.pause : R.string.play));
+    }
+
+    private void setText(TextView v, int resId) { setText(v, ctx.getString(resId)); }
+
+    private static void setText(TextView v, CharSequence text) {
+        if (text == null) text = "";
+        if (!android.text.TextUtils.equals(v.getText(), text)) v.setText(text);
     }
 
     private static int sourceLabel(int type) {

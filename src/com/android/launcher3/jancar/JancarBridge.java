@@ -199,7 +199,7 @@ public final class JancarBridge {
         int attempt;
         int connections;
         long lastConnectedAt;
-        private final Runnable retry = new Runnable() { @Override public void run() { connect(); } };
+        private final Runnable retry = () -> connect();
 
         Link(String name, String action) { this.name = name; this.action = action; }
 
@@ -257,7 +257,7 @@ public final class JancarBridge {
 
         @Override public void binderDied() {
             Diag.log("bridge", name + " murió");
-            main.post(new Runnable() { @Override public void run() { dropAndRetry(); } });
+            main.post(() -> dropAndRetry());
         }
 
         private void dropAndRetry() {
@@ -438,9 +438,7 @@ public final class JancarBridge {
                     final int total = data.readInt();
                     final boolean fav = data.readInt() != 0;
                     final Bitmap bmp = decodeCover(pixels, w, h);
-                    main.post(new Runnable() {
-                        @Override public void run() { applyMediaInfo(type, title, artist, bmp, index, total, pixels == null, fav); }
-                    });
+                    main.post(() -> applyMediaInfo(type, title, artist, bmp, index, total, pixels == null, fav));
                     if (reply != null) reply.writeNoException();
                     return true;
                 }
@@ -450,9 +448,7 @@ public final class JancarBridge {
                     final int state = data.readInt();
                     final int position = data.readInt();
                     final int duration = data.readInt();
-                    main.post(new Runnable() {
-                        @Override public void run() { applyPlayState(type, state, position, duration); }
-                    });
+                    main.post(() -> applyPlayState(type, state, position, duration));
                     if (reply != null) reply.writeNoException();
                     return true;
                 }
@@ -465,7 +461,7 @@ public final class JancarBridge {
                 case CB_ON_SHOWN_TYPE_CHANGED: {
                     data.enforceInterface(DESC_MEDIA_CB);
                     final int type = data.readInt();
-                    main.post(new Runnable() { @Override public void run() { lastEvent = "shownType=" + type; } });
+                    main.post(() -> lastEvent = "shownType=" + type);
                     if (reply != null) reply.writeNoException();
                     return true;
                 }
@@ -486,21 +482,17 @@ public final class JancarBridge {
             data.enforceInterface(DESC_CAR_CB);
             if (code == CARCB_ON_ACC_CHANGED) {
                 final boolean on = data.readInt() != 0;
-                main.post(new Runnable() {
-                    @Override public void run() {
-                        accOn = on; accKnown = true; lastEvent = "acc=" + on;
-                        Diag.log("car", "ACC " + (on ? "ON" : "OFF"));
-                        for (Listener l : new ArrayList<>(listeners)) l.onAccChanged(on);
-                    }
+                main.post(() -> {
+                    accOn = on; accKnown = true; lastEvent = "acc=" + on;
+                    Diag.log("car", "ACC " + (on ? "ON" : "OFF"));
+                    for (Listener l : new ArrayList<>(listeners)) l.onAccChanged(on);
                 });
             } else if (code == CARCB_ON_CCD_CHANGED) {
                 final int status = data.readInt();
-                main.post(new Runnable() {
-                    @Override public void run() {
-                        ccdStatus = status; lastEvent = "ccd=" + status;
-                        Diag.log("car", "CCD " + status);
-                        for (Listener l : new ArrayList<>(listeners)) l.onCcdChanged(status);
-                    }
+                main.post(() -> {
+                    ccdStatus = status; lastEvent = "ccd=" + status;
+                    Diag.log("car", "CCD " + status);
+                    for (Listener l : new ArrayList<>(listeners)) l.onCcdChanged(status);
                 });
             }
             if (reply != null) reply.writeNoException();
@@ -573,9 +565,7 @@ public final class JancarBridge {
             if (fresh == null) { lastCoverHash = 0; lastCoverW = 0; lastCoverH = 0; }
         }
         if (old != null && old != fresh) {
-            main.post(new Runnable() {
-                @Override public void run() { if (!old.isRecycled()) old.recycle(); }
-            });
+            main.post(() -> { if (!old.isRecycled()) old.recycle(); });
         }
     }
 

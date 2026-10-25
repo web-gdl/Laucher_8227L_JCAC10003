@@ -8,10 +8,6 @@
     <string name="diagnostics">Diagnostics</string>
     <string name="back">Back</string>
     <string name="empty_slot">Add</string>
-    <string name="no_apps">No apps</string>
-    <string name="bt_connected">Bluetooth connected</string>
-    <string name="bt_on">Bluetooth</string>
-    <string name="wifi">Wi-Fi</string>
     <string name="media_idle">Nothing playing</string>
     <string name="media_open_hint">Tap to open music</string>
     <string name="media_source_music">Music</string>
@@ -29,7 +25,6 @@
     <string name="remove_favorite">Remove from favorites</string>
     <string name="hide_app">Hide</string>
     <string name="show_hidden">Show hidden</string>
-    <string name="hide_hidden">Hide hidden apps</string>
     <string name="app_info">App info</string>
     <string name="uninstall">Uninstall</string>
     <string name="favorites_full">Favorites are full (%1$d). Remove one first.</string>
@@ -43,4 +38,5 @@
     <string name="media_now_playing">Now playing</string>
     <string name="all_apps_short">All</string>
     <string name="media_last">Last song · tap ▶ to resume</string>
+    <string name="apps_count_hidden">%1$d · %2$d hidden</string>
 </resources>

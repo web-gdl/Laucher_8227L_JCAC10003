@@ -24,7 +24,9 @@ import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 
 /**
@@ -52,6 +54,8 @@ public final class AppsRepository {
     };
 
     private volatile List<AppEntry> apps = Collections.emptyList();
+    /** Iconos en rasterizado → última celda que lo espera (solo hilo principal). */
+    private final Map<String, ImageView> waiting = new HashMap<>();
     private boolean refreshPending;
     private int refreshCount;
 
@@ -95,27 +99,21 @@ public final class AppsRepository {
     public void refresh() {
         if (refreshPending) return;
         refreshPending = true;
-        main.postDelayed(new Runnable() {
-            @Override public void run() {
-                refreshPending = false;
-                bg.post(scanRunnable);
-            }
+        main.postDelayed(() -> {
+            refreshPending = false;
+            bg.post(scanRunnable);
         }, 300);
     }
 
-    private final Runnable scanRunnable = new Runnable() {
-        @Override public void run() {
-            long t0 = System.nanoTime();
-            final List<AppEntry> list = scan();
-            refreshCount++;
-            Diag.log("apps", list.size() + " apps en " + (System.nanoTime() - t0) / 1000000 + " ms");
-            main.post(new Runnable() {
-                @Override public void run() {
-                    apps = list;
-                    for (Listener l : new ArrayList<>(listeners)) l.onAppsChanged(list);
-                }
-            });
-        }
+    private final Runnable scanRunnable = () -> {
+        long t0 = System.nanoTime();
+        final List<AppEntry> list = scan();
+        refreshCount++;
+        Diag.log("apps", list.size() + " apps en " + (System.nanoTime() - t0) / 1000000 + " ms");
+        main.post(() -> {
+            apps = list;
+            for (Listener l : new ArrayList<>(listeners)) l.onAppsChanged(list);
+        });
     };
 
     private List<AppEntry> scan() {
@@ -184,20 +182,26 @@ public final class AppsRepository {
         final String key = entry.key + "@" + sizePx;
         target.setTag(key);
         Bitmap cached = icons.get(key);
-        if (cached != null) { target.setImageBitmap(cached); return; }
+        if (cached != null) { setBitmap(target, cached); return; }
         target.setImageDrawable(null);
-        bg.post(new Runnable() {
-            @Override public void run() {
-                final Bitmap bmp = renderIcon(entry, sizePx);
-                if (bmp == null) return;
-                icons.put(key, bmp);
-                main.post(new Runnable() {
-                    @Override public void run() {
-                        if (key.equals(target.getTag())) target.setImageBitmap(bmp);
-                    }
-                });
-            }
+        // Un solo rasterizado por icono aunque el GridView pida la misma celda varias veces al medir.
+        boolean inFlight = waiting.containsKey(key);
+        waiting.put(key, target);
+        if (inFlight) return;
+        bg.post(() -> {
+            final Bitmap bmp = renderIcon(entry, sizePx);
+            if (bmp != null) icons.put(key, bmp);
+            main.post(() -> {
+                ImageView t = waiting.remove(key);
+                if (bmp != null && t != null && key.equals(t.getTag())) setBitmap(t, bmp);
+            });
         });
+    }
+
+    /** Evita crear un BitmapDrawable nuevo (y relayout) si la celda ya muestra ese bitmap. */
+    private static void setBitmap(ImageView v, Bitmap b) {
+        if (v.getDrawable() instanceof BitmapDrawable && ((BitmapDrawable) v.getDrawable()).getBitmap() == b) return;
+        v.setImageBitmap(b);
     }
 
     private Bitmap renderIcon(AppEntry entry, int sizePx) {

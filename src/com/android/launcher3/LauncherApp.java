@@ -73,19 +73,17 @@ public final class LauncherApp extends Application {
      */
     private void installCrashLogger() {
         final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override public void uncaughtException(Thread t, Throwable e) {
-                try {
-                    File f = new File(getFilesDir(), "crash.txt");
-                    PrintWriter pw = new PrintWriter(new FileWriter(f, false));
-                    pw.println("version " + BuildInfo.version(LauncherApp.this) + " uptime " + uptimeMs() + " ms, hilo " + t.getName());
-                    e.printStackTrace(pw);
-                    pw.println();
-                    pw.print(Diag.dump());
-                    pw.close();
-                } catch (Throwable ignored) {}
-                if (prev != null) prev.uncaughtException(t, e);
-            }
+        Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
+            try {
+                File f = new File(getFilesDir(), "crash.txt");
+                PrintWriter pw = new PrintWriter(new FileWriter(f, false));
+                pw.println("version " + BuildInfo.version(LauncherApp.this) + " uptime " + uptimeMs() + " ms, hilo " + t.getName());
+                e.printStackTrace(pw);
+                pw.println();
+                pw.print(Diag.dump());
+                pw.close();
+            } catch (Throwable ignored) {}
+            if (prev != null) prev.uncaughtException(t, e);
         });
     }
 }

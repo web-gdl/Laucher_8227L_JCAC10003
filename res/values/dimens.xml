@@ -6,24 +6,13 @@
     <dimen name="card_radius">18dp</dimen>
     <dimen name="tile_radius">16dp</dimen>
 
-    <dimen name="clock_size">104sp</dimen>
-    <dimen name="date_size">22sp</dimen>
-    <dimen name="status_icon">26dp</dimen>
-
     <dimen name="cover_size">170dp</dimen>
     <dimen name="media_title">40sp</dimen>
     <dimen name="media_artist">22sp</dimen>
     <dimen name="media_btn">72dp</dimen>
-    <dimen name="media_icon">34dp</dimen>
 
-    <dimen name="fav_icon">72dp</dimen>
-    <dimen name="fav_label">15sp</dimen>
     <dimen name="app_icon">64dp</dimen>
     <dimen name="app_label">14sp</dimen>
-
-    <dimen name="bar_height">64dp</dimen>
-    <dimen name="bar_icon">28dp</dimen>
-    <dimen name="bar_text">15sp</dimen>
 
     <!-- Inicio nocturno -->
     <dimen name="media_text_width">430dp</dimen>

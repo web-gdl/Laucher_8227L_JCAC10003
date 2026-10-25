@@ -37,7 +37,6 @@ public final class MediaMemory implements JancarBridge.Listener {
     private static final long BOOT_DELAY_MS = 6000;       // igual que el launcher de fábrica
     private static final long BOOT_GIVE_UP_MS = 45000;     // esperar al servicio como mucho esto
     private static final long WAKE_CHECK_MS = 3000;        // tras ACC ON, margen para que la app reanude sola
-    private static final long WAKE_RETRY_MS = 5000;        // tras avisar a la app, margen antes del respaldo
     /** Tras encender o arrancar, el servicio pasa un rato sin fuente: no cuenta como «el usuario la cerró». */
     private static final long SETTLE_MS = 30000;
     public static final String ACTION_ACC = "com.jancar.services.action.acc";
@@ -89,6 +88,7 @@ public final class MediaMemory implements JancarBridge.Listener {
     // ------------------------------------------------------------------ JancarBridge.Listener
 
     @Override public void onMediaChanged(MediaState s) {
+        sessions.enrich(s); // paquete de la app de terceros, si la sesión lo sabe
         if (!s.hasContent()) {
             // Sin fuente con el auto encendido y pasado el arranque: el usuario cerró la música.
             if (active && !accOff && SystemClock.elapsedRealtime() > settleUntil) setActive(false);
@@ -122,7 +122,6 @@ public final class MediaMemory implements JancarBridge.Listener {
             if (!accOff) {
                 accOff = true;
                 main.removeCallbacks(wakeCheck);
-                main.removeCallbacks(wakeFallback);
                 Diag.log("memoria", "ACC OFF (sonaba: " + active + ")");
             }
         } else if (accOff) {
@@ -146,29 +145,27 @@ public final class MediaMemory implements JancarBridge.Listener {
      * RadilloPlayerWave, deciden si se reabren (solo si sonaban al apagar). Si la app no lo escucha,
      * se la abre con boot_memory, solo si sonaba y desde la pantalla de inicio.
      */
-    private final Runnable wakeCheck = new Runnable() {
-        @Override public void run() {
-            if (bridge.getMedia().hasContent()) { lastAction = "encender: la música siguió sola"; Diag.log("memoria", lastAction); return; }
-            String target = targetPackage();
-            if (target == null) { lastAction = "encender: sin app de memoria"; Diag.log("memoria", lastAction); return; }
-            if (sendAccOn(target)) {
-                lastAction = "encender: aviso de llave enviado a " + target;
-                Diag.log("memoria", lastAction);
-                return;
-            }
-            main.postDelayed(wakeFallback, 0);
-        }
-    };
+    private final Runnable wakeCheck = this::checkAfterWake;
 
-    private final Runnable wakeFallback = new Runnable() {
-        @Override public void run() {
-            if (bridge.getMedia().hasContent()) return;
-            if (!active) { lastAction = "encender: no sonaba al apagar"; Diag.log("memoria", lastAction); return; }
-            // No tapar la navegación u otra app que el usuario tenga delante.
-            if (!bridge.isHomeVisible()) { lastAction = "encender: omitido (inicio no visible)"; Diag.log("memoria", lastAction); return; }
-            openApp("encender");
+    private void checkAfterWake() {
+        if (bridge.getMedia().hasContent()) { note("encender: la música siguió sola"); return; }
+        String target = targetPackage();
+        if (target == null) { note("encender: sin app de memoria"); return; }
+        if (sendAccOn(target)) {
+            note("encender: aviso de llave enviado a " + target);
+            return;
         }
-    };
+        wakeFallback();
+    }
+
+    /** Respaldo para apps que no escuchan el aviso de la llave: abrirlas, solo si sonaban y desde el inicio. */
+    private void wakeFallback() {
+        if (bridge.getMedia().hasContent()) return;
+        if (!active) { note("encender: no sonaba al apagar"); return; }
+        // No tapar la navegación u otra app que el usuario tenga delante.
+        if (!bridge.isHomeVisible()) { note("encender: omitido (inicio no visible)"); return; }
+        openApp("encender");
+    }
 
     /** Envía com.jancar.services.action.acc (acc=true) solo a {@code target}; false si no tiene receptor. */
     private boolean sendAccOn(String target) {
@@ -197,8 +194,7 @@ public final class MediaMemory implements JancarBridge.Listener {
     /** Lo llama LauncherApp al crearse el proceso. Solo actúa en un arranque real del estéreo. */
     public void scheduleBoot() {
         if (SystemClock.elapsedRealtime() > FRESH_BOOT_MS) {
-            lastAction = "arranque: omitido (el estéreo ya estaba encendido)";
-            Diag.log("memoria", lastAction);
+            note("arranque: omitido (el estéreo ya estaba encendido)");
             return;
         }
         main.postDelayed(bootStep, BOOT_DELAY_MS);
@@ -211,18 +207,16 @@ public final class MediaMemory implements JancarBridge.Listener {
             boolean ready = bridge.isSystemOnline() && bridge.isHomeVisible();
             if (!ready && waited < BOOT_GIVE_UP_MS) { main.postDelayed(this, 2000); return; }
             bootDone = true;
-            if (!bridge.isHomeVisible()) { lastAction = "arranque: omitido (inicio no visible)"; Diag.log("memoria", lastAction); return; }
-            if (bridge.getMedia().hasContent()) { lastAction = "arranque: ya suena algo"; Diag.log("memoria", lastAction); return; }
+            if (!bridge.isHomeVisible()) { note("arranque: omitido (inicio no visible)"); return; }
+            if (bridge.getMedia().hasContent()) { note("arranque: ya suena algo"); return; }
             if (BuildInfo.isReplacement(app) && bridge.openMemoryApp()) {
                 // Misma identidad que el de fábrica: el servicio abre la app con boot_memory=true.
-                lastAction = "arranque: openMemoryApp del servicio";
-                Diag.log("memoria", lastAction);
+                note("arranque: openMemoryApp del servicio");
                 return;
             }
             String target = targetPackage();
             if (target != null && sendAccOn(target)) {
-                lastAction = "arranque: aviso enviado a " + target;
-                Diag.log("memoria", lastAction);
+                note("arranque: aviso enviado a " + target);
                 return;
             }
             openApp("arranque");
@@ -234,15 +228,14 @@ public final class MediaMemory implements JancarBridge.Listener {
     /** Abre la app de memoria con boot_memory=true (la app decide si sigue sonando). */
     public boolean openApp(String why) {
         String target = targetPackage();
-        if (target == null) { lastAction = why + ": sin app conocida"; Diag.log("memoria", lastAction); return false; }
+        if (target == null) { note(why + ": sin app conocida"); return false; }
         Intent i = app.getPackageManager().getLaunchIntentForPackage(target);
-        if (i == null) { lastAction = why + ": " + target + " no instalada"; Diag.log("memoria", lastAction); return false; }
+        if (i == null) { note(why + ": " + target + " no instalada"); return false; }
         i.putExtra(EXTRA_BOOT_MEMORY, true);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         try {
             app.startActivity(i);
-            lastAction = why + ": abierta " + target;
-            Diag.log("memoria", lastAction);
+            note(why + ": abierta " + target);
             return true;
         } catch (ActivityNotFoundException | SecurityException e) {
             lastAction = why + ": error al abrir " + target;
@@ -265,6 +258,12 @@ public final class MediaMemory implements JancarBridge.Listener {
                 String m = bridge.getMemoryAppPackage(); // la app registrada como fuente
                 return m != null && !m.isEmpty() ? m : null;
         }
+    }
+
+    /** Deja constancia de la última decisión (Diagnóstico la muestra) y la registra. */
+    private void note(String action) {
+        lastAction = action;
+        Diag.log("memoria", action);
     }
 
     private static boolean eq(String a, String b) { return a == null ? b == null : a.equals(b); }

@@ -264,6 +264,29 @@ public final class SessionProbe {
 
     public int durationSec() { return (int) (durationMs / 1000); }
 
+    /**
+     * Fuentes de terceros (tipo 20): el servicio Jancar las publica sin paquete y con estado/posición
+     * poco fiables (estado 1, 0/0), así que se completan con la sesión multimedia de la app que suena.
+     * Modifica y devuelve {@code m}; solo en el hilo principal.
+     */
+    public MediaState enrich(MediaState m) {
+        if (m.isThirdParty() && hasSession()) {
+            m.sourcePackage = packageName;
+            m.fromSession = true;
+            m.state = jancarState();
+            m.position = positionSec();
+            m.duration = durationSec();
+            if ((m.title == null || m.title.isEmpty()) && !title.isEmpty()) {
+                m.title = title;
+                if (m.artist == null || m.artist.isEmpty()) m.artist = artist;
+            }
+        } else {
+            m.fromSession = false;
+            if (!m.isThirdParty()) m.sourcePackage = null;
+        }
+        return m;
+    }
+
     public String describe() {
         StringBuilder sb = new StringBuilder(160);
         sb.append(note);

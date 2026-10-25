@@ -14,13 +14,8 @@
 
         <ImageButton
             android:id="@+id/btn_back"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
-            android:padding="14dp"
-            android:scaleType="fitCenter"
-            android:background="@drawable/round_button_bg"
+            style="@style/HeaderButton"
             android:src="@drawable/ic_arrow_back"
-            android:tint="@color/text"
             android:contentDescription="@string/back" />
 
         <TextView

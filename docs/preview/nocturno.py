@@ -93,7 +93,7 @@ def v2_idle():
 def apps_panel():
     from propuestas import APPS as A, aicon as ai, HIGH as HI, SURF as SU
     head = "".join(f'<div style="width:56px;height:56px;border-radius:50%;background:{SU};display:flex;align-items:center;justify-content:center;margin-left:12px">{ico(n, 26, TXT)}</div>' for n in ["power", "settings", "info"])
-    cells = "".join(f'<div style="background:{HI};border-radius:16px;display:flex;flex-direction:column;align-items:center;padding:14px 6px 10px;height:138px">{ai(i,64)}'
+    cells = "".join(f'<div style="border-radius:16px;display:flex;flex-direction:column;align-items:center;padding:14px 6px 10px;height:138px">{ai(i,64)}'
                     f'<div class="l2" style="margin-top:8px;font-size:14px">{A[i][0]}</div></div>' for i in range(11))
     return frame(f"""<div style="position:absolute;inset:0;padding:20px;display:flex;flex-direction:column">
   <div style="height:56px;display:flex;align-items:center">

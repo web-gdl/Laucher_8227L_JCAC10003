@@ -23,15 +23,11 @@ public final class DiagnosticsActivity extends Activity {
         super.onCreate(b);
         setContentView(R.layout.activity_diag);
         report = findViewById(R.id.report);
-        findViewById(R.id.btn_back).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { finish(); } });
-        findViewById(R.id.btn_refresh).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { refresh(); } });
-        findViewById(R.id.btn_reconnect).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { LauncherApp.get().bridge().reconnect(); report.postDelayed(new Runnable() { @Override public void run() { refresh(); } }, 1500); }
-        });
-        findViewById(R.id.btn_gc).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { LauncherApp.get().apps().trimIcons(true); System.gc(); refresh(); }
-        });
-        findViewById(R.id.btn_save).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { save(); } });
+        findViewById(R.id.btn_back).setOnClickListener(v -> finish());
+        findViewById(R.id.btn_refresh).setOnClickListener(v -> refresh());
+        findViewById(R.id.btn_reconnect).setOnClickListener(v -> { LauncherApp.get().bridge().reconnect(); report.postDelayed(() -> refresh(), 1500); });
+        findViewById(R.id.btn_gc).setOnClickListener(v -> { LauncherApp.get().apps().trimIcons(true); System.gc(); refresh(); });
+        findViewById(R.id.btn_save).setOnClickListener(v -> save());
     }
 
     @Override protected void onResume() { super.onResume(); refresh(); }

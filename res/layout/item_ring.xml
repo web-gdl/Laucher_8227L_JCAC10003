@@ -9,7 +9,7 @@
     android:gravity="center_horizontal"
     android:clickable="true"
     android:focusable="true"
-    android:background="@drawable/ring_cell_bg">
+    android:background="@drawable/touch_bg">
 
     <FrameLayout
         android:id="@+id/ring"

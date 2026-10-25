@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical"
     android:gravity="center"
-    android:background="@drawable/tile_bg"
+    android:background="@drawable/touch_bg"
     android:paddingTop="14dp"
     android:paddingBottom="12dp"
     android:paddingStart="6dp"

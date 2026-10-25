@@ -2,6 +2,18 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.4.0: panel más limpio y código revisado
+
+- Panel de aplicaciones **sin recuadros** detrás de los iconos: solo icono y nombre, con el efecto de toque.
+- Código revisado y refactorizado:
+  - Clases anónimas de un método pasadas a lambdas (menos código y menos clases en el APK).
+  - La fusión «servicio Jancar + sesión multimedia» vive en un solo sitio (`SessionProbe.enrich`), y la usan el widget y la memoria de música.
+  - El widget no reescribe textos iguales: el servicio repite la misma información cada pocos segundos y eso reiniciaba el
+    desplazamiento del título y obligaba a medir de nuevo.
+  - Iconos: un solo rasterizado aunque el panel pida la misma celda varias veces, y sin redibujar si la celda ya muestra ese icono.
+  - Fuera recursos sin uso (dibujos, colores, medidas, textos y estilos de la interfaz anterior).
+  - El contador de apps ocultas se traduce (es/en).
+
 ## 3.3.2: memoria
 
 - Diagnóstico muestra el **desglose de la memoria** del proceso (Java, nativa, gráficos, código, pila, otros, sistema)

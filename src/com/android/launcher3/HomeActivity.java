@@ -63,7 +63,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private boolean resumed;
     // Avance de la barra de progreso de apps de terceros: solo mientras suena y el inicio está visible
     private final Handler ticker = new Handler();
-    private final Runnable tick = new Runnable() { @Override public void run() { renderMedia(); } };
+    private final Runnable tick = () -> renderMedia();
 
     // ------------------------------------------------------------------ ciclo de vida
 
@@ -95,48 +95,36 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         buildDock();
         appsAdapter = new AppsAdapter();
         appsGrid.setAdapter(appsAdapter);
-        appsGrid.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override public void onItemClick(AdapterView<?> p, View v, int pos, long id) {
-                AppEntry e = appsAdapter.getItem(pos);
-                if (e != null) { apps.launch(HomeActivity.this, e); }
-            }
+        appsGrid.setOnItemClickListener((p, v, pos, id) -> {
+            AppEntry e = appsAdapter.getItem(pos);
+            if (e != null) { apps.launch(HomeActivity.this, e); }
         });
-        appsGrid.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override public boolean onItemLongClick(AdapterView<?> p, View v, int pos, long id) {
-                AppEntry e = appsAdapter.getItem(pos);
-                if (e != null) showAppMenu(e, false);
-                return true;
-            }
+        appsGrid.setOnItemLongClickListener((p, v, pos, id) -> {
+            AppEntry e = appsAdapter.getItem(pos);
+            if (e != null) showAppMenu(e, false);
+            return true;
         });
 
-        mediaCard.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { openMediaApp(); } });
-        mediaCard.setOnLongClickListener(new View.OnLongClickListener() { @Override public boolean onLongClick(View v) { chooseMediaApp(); return true; } });
-        findViewById(R.id.media_play).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                // Sin fuente activa pero con última canción: reabrir su app (ella sigue donde iba).
-                if (!bridge.getMedia().hasContent() && memory.hasLast() && memory.openApp("toque play")) return;
-                bridge.mediaPlayPause();
-            }
+        mediaCard.setOnClickListener(v -> openMediaApp());
+        mediaCard.setOnLongClickListener(v -> { chooseMediaApp(); return true; });
+        findViewById(R.id.media_play).setOnClickListener(v -> {
+            // Sin fuente activa pero con última canción: reabrir su app (ella sigue donde iba).
+            if (!bridge.getMedia().hasContent() && memory.hasLast() && memory.openApp("toque play")) return;
+            bridge.mediaPlayPause();
         });
-        findViewById(R.id.media_next).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaNext(); } });
-        findViewById(R.id.media_prev).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { bridge.mediaPrev(); } });
+        findViewById(R.id.media_next).setOnClickListener(v -> bridge.mediaNext());
+        findViewById(R.id.media_prev).setOnClickListener(v -> bridge.mediaPrev());
 
-        findViewById(R.id.btn_screen_off).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                if (!bridge.screenOff()) Toast.makeText(HomeActivity.this, R.string.media_service_offline, Toast.LENGTH_SHORT).show();
-            }
+        findViewById(R.id.btn_screen_off).setOnClickListener(v -> {
+            if (!bridge.screenOff()) Toast.makeText(HomeActivity.this, R.string.media_service_offline, Toast.LENGTH_SHORT).show();
         });
-        findViewById(R.id.btn_settings).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { openSettings(); } });
-        findViewById(R.id.btn_diag).setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) { startActivity(new Intent(HomeActivity.this, DiagnosticsActivity.class)); }
-        });
-        findViewById(R.id.btn_apps_back).setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showHome(); } });
-        btnToggleHidden.setOnClickListener(new View.OnClickListener() {
-            @Override public void onClick(View v) {
-                showHidden = !showHidden;
-                prefs.setShowHidden(showHidden);
-                refreshApps();
-            }
+        findViewById(R.id.btn_settings).setOnClickListener(v -> openSettings());
+        findViewById(R.id.btn_diag).setOnClickListener(v -> startActivity(new Intent(HomeActivity.this, DiagnosticsActivity.class)));
+        findViewById(R.id.btn_apps_back).setOnClickListener(v -> showHome());
+        btnToggleHidden.setOnClickListener(v -> {
+            showHidden = !showHidden;
+            prefs.setShowHidden(showHidden);
+            refreshApps();
         });
         Diag.log("home", "onCreate");
     }
@@ -146,8 +134,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         apps.addListener(this);
         bridge.addListener(this);
         sessions.addListener(this);
-        onAppsChanged(apps.getApps());
-        renderMedia();
+        onAppsChanged(apps.getApps()); // la música se pinta en onResume, que siempre sigue
     }
 
     @Override protected void onResume() {
@@ -223,7 +210,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         List<AppEntry> shown = new ArrayList<>(all.size());
         for (AppEntry e : all) if (showHidden || !hidden.contains(e.key)) shown.add(e);
         appsAdapter.setItems(shown);
-        appsCount.setText(shown.size() + (hidden.isEmpty() ? "" : " · " + hidden.size() + " ocultas"));
+        appsCount.setText(hidden.isEmpty() ? String.valueOf(shown.size()) : getString(R.string.apps_count_hidden, shown.size(), hidden.size()));
         btnToggleHidden.setImageTintList(ColorStateList.valueOf(getColor(showHidden ? R.color.accent : R.color.text_dim)));
         btnToggleHidden.setVisibility(hidden.isEmpty() ? View.GONE : View.VISIBLE);
     }
@@ -247,26 +234,9 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     @Override public void onSessionChanged(SessionProbe probe) { renderMedia(); }
 
-    /**
-     * Fuentes de terceros (tipo 20): el servicio las publica sin paquete y con estado/posición
-     * poco fiables, así que se completan con la sesión multimedia de la app que suena.
-     */
+    /** Música del inicio: estado del servicio completado con la sesión multimedia (fuentes de terceros). */
     private void renderMedia() {
-        MediaState m = bridge.getMedia();
-        if (m.isThirdParty() && sessions.hasSession()) {
-            m.sourcePackage = sessions.getPackageName();
-            m.fromSession = true;
-            m.state = sessions.jancarState();
-            m.position = sessions.positionSec();
-            m.duration = sessions.durationSec();
-            if ((m.title == null || m.title.isEmpty()) && !sessions.getTitle().isEmpty()) {
-                m.title = sessions.getTitle();
-                if (m.artist == null || m.artist.isEmpty()) m.artist = sessions.getArtist();
-            }
-        } else {
-            m.fromSession = false;
-            if (!m.isThirdParty()) m.sourcePackage = null;
-        }
+        MediaState m = sessions.enrich(bridge.getMedia());
         if (!m.hasContent() && memory.hasLast()) mediaWidget.renderLast(memory.getTitle(), memory.getArtist());
         else mediaWidget.render(m, bridge.isMediaOnline());
         ticker.removeCallbacks(tick);
@@ -299,7 +269,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         int pad = getResources().getDimensionPixelSize(R.dimen.ring_icon) / 6;
         allIcon.setPadding(pad, pad, pad, pad);
         ((TextView) all.findViewById(R.id.label)).setText(R.string.all_apps_short);
-        all.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showApps(); } });
+        all.setOnClickListener(v -> showApps());
         dock.addView(all);
     }
 
@@ -321,7 +291,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
                 r.icon.setPadding(pad, pad, pad, pad);
                 r.icon.setAlpha(1f);
                 r.label.setText(R.string.empty_slot);
-                r.root.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { showApps(); } });
+                r.root.setOnClickListener(v -> showApps());
                 r.root.setOnLongClickListener(null);
             } else {
                 r.icon.setImageTintList(null);
@@ -329,10 +299,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
                 r.icon.setAlpha(0.9f); // icono a color, apenas atenuado para la noche
                 r.label.setText(e.label);
                 apps.bindIcon(e, r.icon, ringIconPx);
-                r.root.setOnClickListener(new View.OnClickListener() { @Override public void onClick(View v) { apps.launch(HomeActivity.this, e); } });
-                r.root.setOnLongClickListener(new View.OnLongClickListener() {
-                    @Override public boolean onLongClick(View v) { showAppMenu(e, true); return true; }
-                });
+                r.root.setOnClickListener(v -> apps.launch(HomeActivity.this, e));
+                r.root.setOnLongClickListener(v -> { showAppMenu(e, true); return true; });
             }
         }
     }
@@ -367,12 +335,10 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         }
         new AlertDialog.Builder(this)
                 .setTitle(R.string.choose_media_app)
-                .setSingleChoiceItems(labels, checked, new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface d, int which) {
-                        prefs.setMediaApp(list.get(which).packageName);
-                        Diag.log("home", "app de música: " + list.get(which).packageName);
-                        d.dismiss();
-                    }
+                .setSingleChoiceItems(labels, checked, (d, which) -> {
+                    prefs.setMediaApp(list.get(which).packageName);
+                    Diag.log("home", "app de música: " + list.get(which).packageName);
+                    d.dismiss();
                 })
                 .show();
     }
@@ -392,39 +358,31 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         final List<String> items = new ArrayList<>();
         final List<Runnable> actions = new ArrayList<>();
         items.add(getString(isFav ? R.string.remove_favorite : R.string.add_favorite));
-        actions.add(new Runnable() { @Override public void run() { if (isFav) removeFavorite(e); else addFavorite(e); } });
+        actions.add(() -> { if (isFav) removeFavorite(e); else addFavorite(e); });
         if (!fromFavorites) {
             items.add(getString(isHidden ? R.string.show_hidden : R.string.hide_app));
-            actions.add(new Runnable() {
-                @Override public void run() {
-                    if (isHidden) hidden.remove(e.key); else hidden.add(e.key);
-                    prefs.setHidden(hidden);
-                    refreshApps();
-                }
+            actions.add(() -> {
+                if (isHidden) hidden.remove(e.key); else hidden.add(e.key);
+                prefs.setHidden(hidden);
+                refreshApps();
             });
         }
         items.add(getString(R.string.app_info));
-        actions.add(new Runnable() {
-            @Override public void run() {
-                try {
-                    startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + e.packageName))
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-                } catch (ActivityNotFoundException ex) { Toast.makeText(HomeActivity.this, e.packageName, Toast.LENGTH_SHORT).show(); }
-            }
+        actions.add(() -> {
+            try {
+                startActivity(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + e.packageName))
+                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (ActivityNotFoundException ex) { Toast.makeText(HomeActivity.this, e.packageName, Toast.LENGTH_SHORT).show(); }
         });
         items.add(getString(R.string.uninstall));
-        actions.add(new Runnable() {
-            @Override public void run() {
-                try {
-                    startActivity(new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + e.packageName)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
-                } catch (ActivityNotFoundException ex) { Toast.makeText(HomeActivity.this, e.packageName, Toast.LENGTH_SHORT).show(); }
-            }
+        actions.add(() -> {
+            try {
+                startActivity(new Intent(Intent.ACTION_DELETE, Uri.parse("package:" + e.packageName)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+            } catch (ActivityNotFoundException ex) { Toast.makeText(HomeActivity.this, e.packageName, Toast.LENGTH_SHORT).show(); }
         });
         new AlertDialog.Builder(this)
                 .setTitle(e.label)
-                .setItems(items.toArray(new String[0]), new DialogInterface.OnClickListener() {
-                    @Override public void onClick(DialogInterface d, int which) { actions.get(which).run(); }
-                })
+                .setItems(items.toArray(new String[0]), (d, which) -> actions.get(which).run())
                 .show();
     }
 
