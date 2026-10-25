@@ -111,6 +111,7 @@ public final class JancarBridge {
     private int lastCoverW, lastCoverH;
     private String lastEvent = "-";
     private String lastInfoSig = "";
+    private int rawType = Integer.MIN_VALUE, rawState = Integer.MIN_VALUE;
 
     public JancarBridge(Context context) {
         app = context.getApplicationContext();
@@ -546,7 +547,10 @@ public final class JancarBridge {
     }
 
     private void applyPlayState(int type, int state, int position, int duration) {
-        boolean changed = media.type != type || media.state != state;
+        // Se compara con lo último que dijo el servicio: media.state puede venir de la sesión (SessionProbe.enrich).
+        boolean changed = rawType != type || rawState != state;
+        rawType = type;
+        rawState = state;
         media.type = type;
         media.state = state;
         media.position = position;

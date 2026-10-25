@@ -54,8 +54,8 @@ public final class AppsRepository {
     };
 
     private volatile List<AppEntry> apps = Collections.emptyList();
-    /** Iconos en rasterizado → última celda que lo espera (solo hilo principal). */
-    private final Map<String, ImageView> waiting = new HashMap<>();
+    /** Iconos en rasterizado → celdas que lo esperan (solo hilo principal). */
+    private final Map<String, List<ImageView>> waiting = new HashMap<>();
     private boolean refreshPending;
     private int refreshCount;
 
@@ -185,15 +185,18 @@ public final class AppsRepository {
         if (cached != null) { setBitmap(target, cached); return; }
         target.setImageDrawable(null);
         // Un solo rasterizado por icono aunque el GridView pida la misma celda varias veces al medir.
-        boolean inFlight = waiting.containsKey(key);
-        waiting.put(key, target);
-        if (inFlight) return;
+        List<ImageView> queue = waiting.get(key);
+        if (queue != null) { if (!queue.contains(target)) queue.add(target); return; }
+        queue = new ArrayList<>(2);
+        queue.add(target);
+        waiting.put(key, queue);
         bg.post(() -> {
             final Bitmap bmp = renderIcon(entry, sizePx);
             if (bmp != null) icons.put(key, bmp);
             main.post(() -> {
-                ImageView t = waiting.remove(key);
-                if (bmp != null && t != null && key.equals(t.getTag())) setBitmap(t, bmp);
+                List<ImageView> targets = waiting.remove(key);
+                if (bmp == null || targets == null) return;
+                for (ImageView t : targets) if (key.equals(t.getTag())) setBitmap(t, bmp);
             });
         });
     }

@@ -134,7 +134,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         apps.addListener(this);
         bridge.addListener(this);
         sessions.addListener(this);
-        onAppsChanged(apps.getApps()); // la música se pinta en onResume, que siempre sigue
+        onAppsChanged(apps.getApps());
+        renderMedia();
     }
 
     @Override protected void onResume() {
