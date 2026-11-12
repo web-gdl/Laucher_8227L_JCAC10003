@@ -30,14 +30,16 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 
 ## Estado del proyecto
 
-**Versión actual: 3.5.3** (noviembre de 2026; el GPS ya no interviene al abrir el inicio, tras un bloqueo en el 8227L con la 3.5.0–3.5.2): versión con velocímetro, brújula, odómetro y aviso de límite de velocidad,
-ver [`CHANGELOG.md`](CHANGELOG.md). En uso diario por el autor en su JCAC10003 con la variante normal (`Laucher-8227L.apk`):
+**Versión estable: 3.5.3** (noviembre de 2026), con velocímetro, brújula, odómetro y aviso de límite de velocidad; ver [`CHANGELOG.md`](CHANGELOG.md).
+**Probada por el autor en su JCAC10003** (12-nov-2026) con la variante normal (`Laucher-8227L.apk`): abre bien y el velocímetro y la brújula funcionan.
+Las versiones 3.5.0–3.5.2 no abrían en este equipo: no las uses.
 
 - ✅ Inicio nocturno con música e instrumentos, dock de favoritos y panel de aplicaciones sin recuadros.
 - ✅ Widget de música con apps de terceros (RadilloPlayerWave) y fondo con los colores de la portada.
 - ✅ La música vuelve al encender el auto (el estéreo despierta, no reinicia).
-- ✅ Velocímetro, brújula, odómetro y aviso de límite de velocidad con el GPS del estéreo (además, la lógica de distancia y del aviso
-  pasa pruebas automáticas con recorridos simulados en cada cambio).
+- ✅ Velocímetro y brújula con el GPS del estéreo, confirmados en el equipo con la 3.5.3.
+- ⏳ Odómetro y aviso de voz del límite: publicados y con pruebas automáticas (recorridos simulados y arranque en emulador en cada
+  cambio); falta la confirmación en carretera.
 - ⏳ Variante de reemplazo (`com.android.launcher3`): compila y es la misma base, pero el autor no la ha instalado.
 - ⏳ Consumo de memoria: el informe de Diagnóstico ya muestra el desglose; queda medirlo en el equipo para recortar lo que haga falta.
 
@@ -221,6 +223,6 @@ It replaces the factory launcher with a single-activity, ~80 KB, ~26 MB-PSS app 
 through its own binder client. Third-party music apps are supported through Android media sessions. Since 3.5 it also shows a GPS speedometer (green→yellow→red),
 a compass and trip/total odometers, with a spoken warning when you exceed a speed limit you set (tap the speedometer).
 
-**Download (3.5.3):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
+**Download (stable 3.5.3, tested on the device):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
 [`Laucher-8227L-reemplazo.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L-reemplazo.apk) (replaces the factory launcher, needs `adb`).
 In daily use on one JCAC10003. APKs are signed with the public AOSP platform test key (see *Seguridad*). Public domain (Unlicense); provided as is, with no warranty.

@@ -4,6 +4,8 @@ Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher
 
 ## 3.5.3: el inicio abre siempre; instrumentos por etapas
 
+**Probada en el JCAC10003 (12-nov-2026): abre bien y el velocímetro y la brújula funcionan.** Versión estable.
+
 La 3.5.2 no resolvió el bloqueo en el alps 8227L (el inicio no abría y el sistema se congelaba). En un emulador de Android 8.1
 las versiones 3.5.x arrancan bien, así que el fallo depende del equipo; el GPS de este estéreo ya se colgaba de vez en cuando
 con el software de fábrica (había que pulsar RESET). Esta versión quita del arranque todo lo que toca el GPS:

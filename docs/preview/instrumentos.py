@@ -121,7 +121,7 @@ def home(speed, heading, limit, trip, total, status=None, playing=True):
 if __name__ == "__main__":
     SHOTS.mkdir(parents=True, exist_ok=True)
     jobs = [(SHOTS / "01-inicio-reproduciendo.png", lambda: home(72, 45, 110, "18.4", "48 213")),
-            (SHOTS / "02-inicio-reposo.png", lambda: home(None, None, 110, "0.0", "48 213", "Buscando satélites…", playing=False)),
+            (SHOTS / "02-inicio-reposo.png", lambda: home(None, None, 110, "0.0", "48 213", "Toca para activar velocímetro y odómetro", playing=False)),
             (SHOTS / "05-limite-de-velocidad.png", lambda: home(118, 300, 110, "52.7", "48 247"))]
     with sync_playwright() as p:
         b = p.chromium.launch()
