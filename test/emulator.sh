@@ -45,6 +45,25 @@ tap_text "ALLOW"; sleep 4; shot 5-activado
 adb emu geo fix -103.3500 20.6700; sleep 2; adb emu geo fix -103.3495 20.6705; sleep 2; adb emu geo fix -103.3490 20.6710
 sleep 18; shot 6-gps-comprobado       # tras ~17 s pasa al servicio en primer plano
 
+# 2b) Aviso de voz: pulsación larga sobre el velocímetro (como la prueba del usuario)
+adb shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; adb pull /sdcard/ui.xml $O/ui-gauge.xml >/dev/null 2>&1
+GXY=$(python3 - "$O/ui-gauge.xml" <<'PY'
+import re, sys
+try: x = open(sys.argv[1], encoding='utf-8').read()
+except Exception: sys.exit()
+m = re.search(r'resource-id="[^"]*speed_gauge"[^>]*bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"', x)
+if m: a, b, c, d = map(int, m.groups()); print((a + c) // 2, (b + d) // 2)
+PY
+)
+echo "velocímetro en $GXY" | tee $O/aviso.txt
+adb shell media volume --stream 3 --set 4 >> $O/aviso.txt 2>&1 || true
+adb shell dumpsys audio | grep -iE "STREAM_MUSIC|streamVolume" -A3 | head -12 >> $O/aviso.txt
+[ -n "$GXY" ] && adb shell input swipe $GXY $GXY 1300
+sleep 2; adb shell dumpsys audio | grep -iE "focus|duck" | head -20 >> $O/aviso.txt
+shot 6b-aviso
+sleep 9; adb shell dumpsys audio | grep -iE "focus stack|Audio Focus" -A4 | head -10 >> $O/aviso-despues.txt
+shot 6c-tras-aviso
+
 # 3) Avisos de ACC como los manda el estéreo: repetidos y apagado/encendido seguidos
 acc true; acc true; sleep 1; acc true; sleep 8; shot 7-acc-repetido
 acc false; acc true; acc false; acc true; sleep 8; shot 8-acc-apagado-encendido
@@ -65,7 +84,7 @@ adb logcat -d -v time > $O/logcat.txt
 grep -nE "FATAL EXCEPTION|AndroidRuntime: |ANR in|did not then call|Process $PKG .*died|has died|Force stopping $PKG" $O/logcat.txt | grep -E "$PKG|AndroidRuntime|ANR|did not" | head -100 > $O/logcat-resumen.txt
 set +x
 echo "PID inicial=$PID0 tras ACC=$PID1 tras reinicio=$PID2" | tee $O/resultado.txt
-for f in $O/*actividades.txt $O/servicios.txt $O/crash.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
+for f in $O/aviso.txt $O/aviso-despues.txt $O/*actividades.txt $O/servicios.txt $O/crash.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
 FAIL=0
 [ -n "$PID0" ] && [ "$PID0" = "$PID1" ] || { echo "FALLO: el proceso cambió o murió durante la prueba" | tee -a $O/resultado.txt; FAIL=1; }
 [ -n "$PID2" ] || { echo "FALLO: no arrancó tras el reinicio" | tee -a $O/resultado.txt; FAIL=1; }

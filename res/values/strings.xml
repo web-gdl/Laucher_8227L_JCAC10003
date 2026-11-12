@@ -63,7 +63,6 @@
     <string name="odo_save">Guardar</string>
     <string name="cancel_btn">Cancelar</string>
     <string name="km_format">%1$s km</string>
-    <string name="speed_warning_voice">Está excediendo el límite de velocidad</string>
     <string name="limit_title">Límite de velocidad</string>
     <string name="limit_msg">Si lo superas, una voz te avisa. Escribe los km/h (por ejemplo 110).</string>
     <string name="limit_off">Desactivar</string>

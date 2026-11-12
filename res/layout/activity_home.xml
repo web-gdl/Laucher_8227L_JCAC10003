@@ -72,9 +72,10 @@
                         android:tint="@color/text_dim" />
 
                     <LinearLayout
-                        android:layout_width="@dimen/media_text_width"
+                        android:layout_width="0dp"
+                        android:layout_weight="1"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="24dp"
+                        android:layout_marginStart="22dp"
                         android:orientation="vertical">
 
                         <TextView
@@ -182,7 +183,8 @@
                 <!-- Instrumentos (GPS del estéreo). Si falta permiso o el GPS está apagado, tocar lo resuelve. -->
                 <LinearLayout
                     android:id="@+id/gauges_card"
-                    android:layout_width="@dimen/gauges_width"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="26dp"
                     android:orientation="vertical"

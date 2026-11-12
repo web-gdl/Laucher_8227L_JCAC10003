@@ -15,14 +15,12 @@
     <dimen name="app_label">14sp</dimen>
 
     <!-- Inicio nocturno -->
-    <dimen name="media_text_width">320dp</dimen>
     <dimen name="media_btn_main">76dp</dimen>
     <dimen name="ring_cell">96dp</dimen>
     <dimen name="ring_size">76dp</dimen>
     <dimen name="ring_icon">44dp</dimen>
 
     <!-- Instrumentos -->
-    <dimen name="gauges_width">340dp</dimen>
-    <dimen name="speed_gauge">180dp</dimen>
-    <dimen name="compass">110dp</dimen>
+    <dimen name="speed_gauge">210dp</dimen>
+    <dimen name="compass">130dp</dimen>
 </resources>

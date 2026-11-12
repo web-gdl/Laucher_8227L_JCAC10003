@@ -140,6 +140,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         findViewById(R.id.gauges_card).setOnClickListener(v -> onGaugesTapped());
         // Velocímetro: límite de velocidad. Odómetro: reiniciar o ajustar (pulsación larga: atajos directos).
         speedGauge.setOnClickListener(v -> { if (!fixGps()) editSpeedLimit(); });
+        // Pulsación larga: probar el aviso de voz (atenuar música, volumen alto) sin tener que pasarse del límite
+        speedGauge.setOnLongClickListener(v -> { LauncherApp.get().speedAlert().warn(); return true; });
         findViewById(R.id.odo_trip_box).setOnClickListener(v -> showOdometerMenu());
         findViewById(R.id.odo_total_box).setOnClickListener(v -> showOdometerMenu());
         findViewById(R.id.odo_trip_box).setOnLongClickListener(v -> { confirmResetTrip(); return true; });

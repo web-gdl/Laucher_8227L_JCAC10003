@@ -55,7 +55,6 @@
     <string name="odo_save">Save</string>
     <string name="cancel_btn">Cancel</string>
     <string name="km_format">%1$s km</string>
-    <string name="speed_warning_voice">You are exceeding the speed limit</string>
     <string name="limit_title">Speed limit</string>
     <string name="limit_msg">A voice warns you when you go over it. Enter km/h (for example 110).</string>
     <string name="limit_off">Turn off</string>
