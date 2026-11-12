@@ -9,6 +9,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.SystemClock;
 
@@ -30,7 +31,7 @@ import java.util.Locale;
  */
 public final class GpsTracker implements JancarBridge.Listener {
 
-    public enum State { OFF, NO_PERMISSION, DISABLED, SEARCHING, OK }
+    public enum State { OFF, NO_PERMISSION, DISABLED, STUCK, SEARCHING, OK }
 
     public interface Listener { void onGpsChanged(GpsTracker gps); }
 
@@ -49,6 +50,13 @@ public final class GpsTracker implements JancarBridge.Listener {
     private double unsavedM;
     private float lastAccuracy = -1f;
     private int satellites = -1;
+    private static final long START_TIMEOUT_MS = 6000;
+    // Las llamadas al LocationManager van en un hilo propio: con el GPS del estéreo colgado pueden bloquearse,
+    // y en el hilo principal eso congelaba el inicio («no responde»).
+    private HandlerThread gpsThread;
+    private Handler gpsHandler;
+    private int callSeq, returnedSeq;
+    private boolean stuck;
     private boolean homeVisible;
     private boolean accOn = true;
 
@@ -69,28 +77,86 @@ public final class GpsTracker implements JancarBridge.Listener {
         if (running) return;
         if (!Guard.gpsEnabled()) { setState(State.OFF); return; }
         if (!hasPermission()) { setState(State.NO_PERMISSION); return; }
+        if (stuck) { setState(State.STUCK); return; }
         if (lm == null) lm = (LocationManager) app.getSystemService(Context.LOCATION_SERVICE);
         if (lm == null) { setState(State.DISABLED); return; }
-        try {
-            Guard.begin(Guard.GPS);
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, locationListener, Looper.getMainLooper());
-            running = true;
-            trip.breakSegment();
-            setState(lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ? State.SEARCHING : State.DISABLED);
-            Diag.log("gps", "inicio, estado " + state);
-            main.postDelayed(staleCheck, Trip.STALE_MS);
-        } catch (SecurityException | IllegalArgumentException e) {
-            Diag.warn("gps", "requestLocationUpdates", e);
-            setState(hasPermission() ? State.DISABLED : State.NO_PERMISSION);
+        running = true;
+        trip.breakSegment();
+        Guard.begin(Guard.GPS);
+        setState(State.SEARCHING);
+        Diag.log("gps", "inicio");
+        final int call = ++callSeq;
+        worker().post(() -> {
+            // Hilo «gps»: si el GPS del estéreo está colgado, esta llamada puede no volver nunca
+            String error = null;
+            boolean enabled = false;
+            try {
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, locationListener, gpsThread.getLooper());
+                enabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            } catch (RuntimeException e) {
+                error = e.toString();
+            }
+            final String err = error;
+            final boolean on = enabled;
+            main.post(() -> onStartReturned(call, err, on));
+        });
+        main.removeCallbacks(startWatchdog);
+        main.postDelayed(startWatchdog, START_TIMEOUT_MS);
+        main.postDelayed(staleCheck, Trip.STALE_MS);
+    }
+
+    private Handler worker() {
+        if (gpsThread == null) {
+            gpsThread = new HandlerThread("gps");
+            gpsThread.start();
+            gpsHandler = new Handler(gpsThread.getLooper());
         }
+        return gpsHandler;
+    }
+
+    private void onStartReturned(int call, String error, boolean providerOn) {
+        returnedSeq = call;
+        main.removeCallbacks(startWatchdog);
+        if (stuck) {
+            stuck = false;
+            Diag.log("gps", "el GPS volvió a responder");
+        }
+        if (call != callSeq || !running) { // se detuvo (o se reinició) mientras tanto
+            if (!running) { removeUpdatesAsync(); sync(); }
+            return;
+        }
+        if (error != null) {
+            Diag.log("gps", "requestLocationUpdates: " + error);
+            running = false;
+            setState(hasPermission() ? State.DISABLED : State.NO_PERMISSION);
+        } else if (!providerOn) {
+            setState(State.DISABLED);
+        }
+    }
+
+    private final Runnable startWatchdog = this::checkStartReturned;
+
+    private void checkStartReturned() {
+        if (returnedSeq == callSeq) return;
+        stuck = true;
+        running = false;
+        main.removeCallbacks(staleCheck);
+        Diag.log("gps", "el GPS del sistema no responde tras " + START_TIMEOUT_MS / 1000 + " s (¿chip colgado?)");
+        setState(State.STUCK);
+    }
+
+    private void removeUpdatesAsync() {
+        if (lm == null || gpsHandler == null) return;
+        gpsHandler.post(() -> {
+            try { lm.removeUpdates(locationListener); } catch (RuntimeException ignored) {}
+        });
     }
 
     public void stop() {
         if (!running) { recheck(); return; }
         main.removeCallbacks(staleCheck);
-        if (running && lm != null) {
-            try { lm.removeUpdates(locationListener); } catch (RuntimeException ignored) {}
-        }
+        main.removeCallbacks(startWatchdog);
+        removeUpdatesAsync();
         running = false;
         trip.breakSegment();
         save();
@@ -108,7 +174,7 @@ public final class GpsTracker implements JancarBridge.Listener {
     }
 
     private void updateIdleState() {
-        state = !Guard.gpsEnabled() ? State.OFF : hasPermission() ? State.SEARCHING : State.NO_PERMISSION;
+        state = !Guard.gpsEnabled() ? State.OFF : !hasPermission() ? State.NO_PERMISSION : stuck ? State.STUCK : State.SEARCHING;
     }
 
     /** El inicio está (o deja de estar) a la vista. */
@@ -151,7 +217,23 @@ public final class GpsTracker implements JancarBridge.Listener {
     // ------------------------------------------------------------------ GPS
 
     private final LocationListener locationListener = new LocationListener() {
-        @Override public void onLocationChanged(Location l) {
+        // Llegan en el hilo «gps»; el estado se toca solo en el principal
+        @Override public void onLocationChanged(final Location l) { main.post(() -> onFix(l)); }
+
+        @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+
+        @Override public void onProviderEnabled(String provider) {
+            main.post(() -> { Diag.log("gps", "GPS activado"); if (running) setState(State.SEARCHING); });
+        }
+
+        @Override public void onProviderDisabled(String provider) {
+            main.post(() -> { Diag.log("gps", "GPS desactivado"); trip.breakSegment(); if (running) setState(State.DISABLED); });
+        }
+    };
+
+    private void onFix(Location l) {
+        if (!running) return;
+        {
             long now = l.getElapsedRealtimeNanos() > 0 ? l.getElapsedRealtimeNanos() : SystemClock.elapsedRealtimeNanos();
             lastAccuracy = l.hasAccuracy() ? l.getAccuracy() : -1f;
             Bundle extras = l.getExtras();
@@ -165,20 +247,7 @@ public final class GpsTracker implements JancarBridge.Listener {
             main.postDelayed(staleCheck, Trip.STALE_MS + 200);
             notifyChanged();
         }
-
-        @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-        @Override public void onProviderEnabled(String provider) {
-            Diag.log("gps", "GPS activado");
-            setState(State.SEARCHING);
-        }
-
-        @Override public void onProviderDisabled(String provider) {
-            Diag.log("gps", "GPS desactivado");
-            trip.breakSegment();
-            setState(State.DISABLED);
-        }
-    };
+    }
 
     /** Sin posiciones durante unos segundos: «buscando» y velocidad desconocida. */
     private final Runnable staleCheck = this::checkStale;

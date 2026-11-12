@@ -2,6 +2,25 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.5.3: el inicio abre siempre; instrumentos por etapas
+
+La 3.5.2 no resolvió el bloqueo en el alps 8227L (el inicio no abría y el sistema se congelaba). En un emulador de Android 8.1
+las versiones 3.5.x arrancan bien, así que el fallo depende del equipo; el GPS de este estéreo ya se colgaba de vez en cuando
+con el software de fábrica (había que pulsar RESET). Esta versión quita del arranque todo lo que toca el GPS:
+
+- **Nada de GPS al abrir.** El velocímetro y el odómetro empiezan apagados: la tarjeta dice «Toca para activar velocímetro y
+  odómetro». Al tocarla se pide el permiso (en ventana aparte) y se enciende; desde entonces se enciende sola con el auto.
+- **Las llamadas al GPS salen del hilo principal.** Van en un hilo propio con vigilancia: si el GPS del sistema no contesta en 6 s,
+  la tarjeta avisa «El GPS del estéreo no responde · reinicia el estéreo (RESET)» y el launcher sigue funcionando.
+- **Seguro de arranque por etapas** (`car/Guard`): dibujar los instrumentos → pedir posiciones (solo con el inicio visible) →
+  servicio en segundo plano. Cada etapa se anota en disco antes de empezar; si el launcher se congela o se cierra en una, al
+  siguiente arranque esa etapa queda desactivada sola y Diagnóstico dice cuál fue («Seguro de instrumentos»).
+- El servicio en primer plano se pide una sola vez aunque el estéreo repita el aviso de encendido, y nunca se detiene a medio arrancar.
+- Menú del odómetro: «Medir con otras apps delante: sí/no» y «Apagar/Activar velocímetro y odómetro».
+- Nueva prueba automática en un emulador (GitHub Actions, `test/emulator.sh`): instala, elige el inicio, activa los
+  instrumentos, simula los avisos de ACC y posiciones GPS, y falla si el launcher se cierra o deja de responder.
+- El nombre de la app también es «Laucher 8227L» con el sistema en inglés.
+
 ## 3.5.2: el inicio no abría al instalarlo
 
 - **Corregido:** en el alps 8227L, tras instalar la 3.5.0/3.5.1 y elegir «Laucher 8227L» en *Abrir con… una vez / siempre*,

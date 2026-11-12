@@ -30,7 +30,7 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 
 ## Estado del proyecto
 
-**Versión estable: 3.5.2** (noviembre de 2026; corrige que el inicio no abría al instalarlo): versión definitiva con velocímetro, brújula, odómetro y aviso de límite de velocidad,
+**Versión actual: 3.5.3** (noviembre de 2026; el GPS ya no interviene al abrir el inicio, tras un bloqueo en el 8227L con la 3.5.0–3.5.2): versión con velocímetro, brújula, odómetro y aviso de límite de velocidad,
 ver [`CHANGELOG.md`](CHANGELOG.md). En uso diario por el autor en su JCAC10003 con la variante normal (`Laucher-8227L.apk`):
 
 - ✅ Inicio nocturno con música e instrumentos, dock de favoritos y panel de aplicaciones sin recuadros.
@@ -71,15 +71,16 @@ Cada APK se compila en GitHub Actions a partir de este código; puedes compilarl
    También sirve `adb install -r Laucher-8227L.apk`. Si ya tenías una versión anterior («Inicio (prueba)»), se instala encima y conserva tus favoritos.
 2. Aparece como **«Laucher 8227L»**. Pulsa el botón **Inicio** del estéreo y, cuando pregunte qué launcher usar, elige *Laucher 8227L* →
    **«Siempre»** para dejarlo como pantalla de inicio (o «Solo una vez» si quieres seguir eligiendo).
-3. Para el velocímetro y el odómetro, **toca la tarjeta de instrumentos** («Toca para permitir la ubicación») y concede el permiso.
+3. El velocímetro y el odómetro empiezan apagados: **toca la tarjeta de instrumentos** («Toca para activar velocímetro y odómetro») y concede el permiso de ubicación.
    Después toca *Total* → *Ajustar total* y escribe los km del tablero, y toca el velocímetro para fijar tu límite de velocidad.
 4. Para volver al de fábrica: Ajustes → Aplicaciones → Laucher 8227L → *Borrar valores predeterminados*, o desinstálalo como cualquier app.
 
 Esta variante no toca nada del sistema: no es persistente, no usa el usuario de sistema y no pide a la «app de memoria» que arranque con el coche.
 
-**Si el inicio no abre** (pantalla «Abrir con… una vez / siempre» que no avanza): era un fallo de la 3.5.0 y 3.5.1, corregido en la 3.5.2.
+**Si el inicio no abre** (pantalla «Abrir con… una vez / siempre» que no avanza): pasaba con la 3.5.0–3.5.2 en el 8227L; la 3.5.3 ya no toca el GPS al abrir
+y, si el GPS del estéreo se cuelga, lo avisa en la tarjeta en vez de congelarse (ese GPS a veces solo se recupera con el botón RESET).
 Para salir: botón *Atrás* o *Inicio* de la barra del sistema y elige el launcher de fábrica; si elegiste «Siempre», entra en
-Ajustes → Aplicaciones → Laucher 8227L → *Borrar valores predeterminados* (o `adb uninstall com.webgdl.launcher8227`) e instala la 3.5.2.
+Ajustes → Aplicaciones → Laucher 8227L → *Borrar valores predeterminados* (o `adb uninstall com.webgdl.launcher8227`) e instala la 3.5.3.
 Si el launcher se cierra solo, deja `Android/data/com.webgdl.launcher8227/files/crash.txt` en la memoria del estéreo: adjúntalo en un *issue*.
 
 ## Instalación de la versión de reemplazo (avanzado)
@@ -104,7 +105,7 @@ Si no estás seguro de poder revertirla, **no la instales**: usa `Laucher-8227L.
     El número se pone rojo. «Desactivar» lo quita.
   - **Odómetro**: tócalo para *Reiniciar viaje a 0*, *Ajustar viaje* o *Ajustar total* (al número del tablero del auto). Atajos: pulsación larga en Viaje para reiniciarlo, en Total para ajustarlo.
   - Se descartan posiciones imprecisas, el «baile» del GPS con el auto parado y los saltos imposibles. Se mide solo con el auto encendido; una notificación
-    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. Sin permiso de ubicación, la tarjeta dice «Toca para permitir la ubicación».
+    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. Empiezan apagados: se activan tocando la tarjeta (y se apagan desde el menú del odómetro).
 - **Música** con título, artista, portada redonda, fondo con sus colores, progreso, tiempos y anterior / play‑pausa / siguiente. Funciona con las fuentes de fábrica (música, radio,
   vídeo, Bluetooth) y con **apps de terceros**: para estas obtiene el paquete, el estado y la posición de la sesión multimedia de Android, de modo que
   al tocar la portada o el título se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
@@ -182,7 +183,9 @@ src/com/android/launcher3/
   ui/CompassView.java       brújula (rosa que gira con el rumbo)
   car/Trip.java             velocidad, rumbo y odómetro a partir del GPS (Java puro, con pruebas)
   car/SpeedLimit.java       cuándo avisar por exceso de velocidad (Java puro, con pruebas)
-  car/GpsTracker.java       LocationManager → Trip; guarda el odómetro
+  car/GpsTracker.java       LocationManager (en hilo propio, con vigilancia) → Trip; guarda el odómetro
+  car/Guard.java            seguro de arranque por etapas de los instrumentos
+  car/PermissionActivity.java  pide el permiso de ubicación fuera de la pantalla de inicio
   car/TripService.java      servicio en primer plano mientras el auto está encendido
   car/SpeedAlert.java       aviso de voz (TextToSpeech) o pitido
   DiagnosticsActivity.java  informe de memoria, servicios y registro
@@ -190,7 +193,7 @@ res/                        layouts, vectores y textos (es/en)
 tools/                      get-tools.sh, Sign.java, Verify.java
 docs/screenshots, bocetos  imágenes del diseño (render) y las 20 propuestas
 docs/preview/              generadores de esas imágenes (Python + Playwright)
-test/                      pruebas de Trip y SpeedLimit con recorridos simulados (./test/run.sh)
+test/                      pruebas de Trip y SpeedLimit (./test/run.sh) y de arranque en emulador (emulator.sh, en Actions)
 ```
 
 ## Seguridad: léelo antes de instalar
@@ -218,6 +221,6 @@ It replaces the factory launcher with a single-activity, ~80 KB, ~26 MB-PSS app 
 through its own binder client. Third-party music apps are supported through Android media sessions. Since 3.5 it also shows a GPS speedometer (green→yellow→red),
 a compass and trip/total odometers, with a spoken warning when you exceed a speed limit you set (tap the speedometer).
 
-**Download (stable 3.5.2):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
+**Download (3.5.3):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
 [`Laucher-8227L-reemplazo.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L-reemplazo.apk) (replaces the factory launcher, needs `adb`).
 In daily use on one JCAC10003. APKs are signed with the public AOSP platform test key (see *Seguridad*). Public domain (Unlicense); provided as is, with no warranty.

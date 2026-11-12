@@ -275,6 +275,9 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
             case DISABLED:
                 tryStart(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 break;
+            case STUCK:
+                gps.sync(); // reintenta si ya respondió
+                break;
             default:
                 return false;
         }
@@ -301,6 +304,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
                 : st == GpsTracker.State.OFF ? (Guard.tripped(Guard.GPS) ? R.string.gps_tripped : R.string.gps_off)
                 : st == GpsTracker.State.NO_PERMISSION ? R.string.gps_no_permission
                 : st == GpsTracker.State.DISABLED ? R.string.gps_disabled
+                : st == GpsTracker.State.STUCK ? R.string.gps_stuck
                 : st == GpsTracker.State.SEARCHING && g.isRunning() ? R.string.gps_searching : 0;
         if (msg == 0) {
             if (gpsStatus.getVisibility() != View.GONE) gpsStatus.setVisibility(View.GONE);

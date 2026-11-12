@@ -72,4 +72,5 @@
     <string name="odo_menu_bg_off">Measure while other apps are open: NO (tap to turn on)</string>
     <string name="odo_menu_gps_off">Turn off speedometer and odometer</string>
     <string name="odo_menu_gps_on">Turn on speedometer and odometer</string>
+    <string name="gps_stuck">The head unit\'s GPS is not responding · restart it (RESET)</string>
 </resources>

@@ -80,4 +80,5 @@
     <string name="odo_menu_bg_off">Medir con otras apps delante: NO (tocar para activar)</string>
     <string name="odo_menu_gps_off">Apagar velocímetro y odómetro</string>
     <string name="odo_menu_gps_on">Activar velocímetro y odómetro</string>
+    <string name="gps_stuck">El GPS del estéreo no responde · reinicia el estéreo (RESET)</string>
 </resources>
