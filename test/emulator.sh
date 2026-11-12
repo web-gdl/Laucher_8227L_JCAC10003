@@ -82,9 +82,10 @@ adb shell dumpsys activity services $PKG > $O/servicios.txt
 adb shell cat /sdcard/Android/data/$PKG/files/crash.txt > $O/crash.txt 2>/dev/null || true
 adb logcat -d -v time > $O/logcat.txt
 grep -nE "FATAL EXCEPTION|AndroidRuntime: |ANR in|did not then call|Process $PKG .*died|has died|Force stopping $PKG" $O/logcat.txt | grep -E "$PKG|AndroidRuntime|ANR|did not" | head -100 > $O/logcat-resumen.txt
+grep -E "LauncherNativo|MediaPlayer|AudioTrack.*(error|fail)" $O/logcat.txt | grep -E "gps:|seguro|MediaPlayer" > $O/launcher-log.txt
 set +x
 echo "PID inicial=$PID0 tras ACC=$PID1 tras reinicio=$PID2" | tee $O/resultado.txt
-for f in $O/aviso.txt $O/aviso-despues.txt $O/*actividades.txt $O/servicios.txt $O/crash.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
+for f in $O/launcher-log.txt $O/aviso.txt $O/aviso-despues.txt $O/*actividades.txt $O/servicios.txt $O/crash.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
 FAIL=0
 [ -n "$PID0" ] && [ "$PID0" = "$PID1" ] || { echo "FALLO: el proceso cambió o murió durante la prueba" | tee -a $O/resultado.txt; FAIL=1; }
 [ -n "$PID2" ] || { echo "FALLO: no arrancó tras el reinicio" | tee -a $O/resultado.txt; FAIL=1; }
