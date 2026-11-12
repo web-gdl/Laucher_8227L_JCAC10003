@@ -52,6 +52,17 @@ adb shell am start -W -a android.intent.action.MAIN -c android.intent.category.H
 sleep 15; shot 4-inicio-con-permiso
 adb emu geo fix -103.35 20.67 2>/dev/null; sleep 3; adb emu geo fix -103.349 20.671 2>/dev/null; sleep 5; shot 5-con-gps
 
+# 4) Como en el estéreo: el servicio Jancar avisa del ACC varias veces (encendido repetido y apagado/encendido)
+adb shell am broadcast -a com.jancar.services.action.acc --ez acc true
+sleep 1; adb shell am broadcast -a com.jancar.services.action.acc --ez acc true
+sleep 9; shot 6-tras-acc-repetido
+adb shell am broadcast -a com.jancar.services.action.acc --ez acc false
+adb shell am broadcast -a com.jancar.services.action.acc --ez acc true
+adb shell am broadcast -a com.jancar.services.action.acc --ez acc false
+adb shell am broadcast -a com.jancar.services.action.acc --ez acc true
+sleep 9; shot 7-tras-acc-apagado-encendido
+adb shell pidof $PKG > $O/pid-final.txt
+
 adb shell dumpsys activity services $PKG > $O/servicios.txt
 adb shell dumpsys notification > $O/notificaciones.txt
 adb shell pidof $PKG > $O/pid.txt
@@ -59,7 +70,7 @@ adb shell run-as $PKG cat files/crash.txt > $O/crash.txt 2>&1 || true
 adb shell cat /sdcard/Android/data/$PKG/files/crash.txt >> $O/crash.txt 2>&1 || true
 adb shell ls /data/anr >> $O/anr.txt 2>&1 || true
 adb logcat -d -v time > $O/logcat.txt
-grep -nE "FATAL|AndroidRuntime|ANR in|Exception|launcher8227|art  :" $O/logcat.txt | head -300 > $O/logcat-resumen.txt
+grep -nE "FATAL|AndroidRuntime: |ANR in|did not then call|launcher8227.*(died|Kill|crash)|Force stopping" $O/logcat.txt | head -300 > $O/logcat-resumen.txt
 set +x
-for f in $O/*actividades.txt $O/3-start.txt $O/4-start.txt $O/pid.txt $O/crash.txt $O/anr.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
+for f in $O/*actividades.txt $O/3-start.txt $O/4-start.txt $O/pid.txt $O/pid-final.txt $O/crash.txt $O/anr.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
 exit 0
