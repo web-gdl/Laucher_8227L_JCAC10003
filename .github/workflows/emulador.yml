@@ -1,0 +1,45 @@
+name: Probar en emulador
+
+# Arranca el APK en un emulador Android 8.1 como pantalla de inicio y guarda capturas y logcat (artefacto «emulador»).
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Rama o commit a probar
+        default: main
+  push:
+    branches: [ 'emulador/**' ]
+
+jobs:
+  emulador:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compilar
+        run: ./tools/get-tools.sh && ./build.sh --variant normal
+      - name: Habilitar KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules && sudo udevadm trigger --name-match=kvm
+      - name: Emulador API 27
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 27
+          arch: x86
+          target: google_apis
+          profile: 7in WSVGA (Tablet)
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          script: ./test/emulator.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: emulador
+          path: emu-out/
