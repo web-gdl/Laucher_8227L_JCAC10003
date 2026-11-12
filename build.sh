@@ -2,7 +2,7 @@
 # Compila, empaqueta y firma el launcher nativo sin Gradle ni Android Studio.
 #
 #   ./build.sh                       → variante "reemplazo" (com.android.launcher3, uid system, persistente)
-#   ./build.sh --variant prueba      → variante "prueba" (com.webgdl.launcher8227, app normal con icono en el cajón)
+#   ./build.sh --variant normal      → variante "normal" (com.webgdl.launcher8227, app normal con icono en el cajón; antes «prueba»)
 #   ./build.sh --variant ambas       → las dos
 #
 # Requisitos (carpeta tools/, los descarga tools/get-tools.sh): android-27.jar, aapt2,
@@ -18,7 +18,7 @@ export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dfile.encoding=UTF-8"
 VARIANT=reemplazo
 while [ $# -gt 0 ]; do
   case "$1" in
-    --variant) VARIANT="$2"; shift 2 ;;
+    --variant) VARIANT="$2"; [ "$VARIANT" = prueba ] && VARIANT=normal; shift 2 ;;
     -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
     *) echo "Opción desconocida: $1"; exit 2 ;;
   esac
@@ -33,15 +33,15 @@ build_one() {
   local variant=$1
   local B="build/$variant" apk manifest link_extra=""
   case "$variant" in
-    reemplazo) apk="$OUT/launcher-nativo.apk" ;;
-    prueba)    apk="$OUT/launcher-prueba.apk" ;;
-    *) echo "Variante desconocida: $variant (reemplazo | prueba | ambas)"; exit 2 ;;
+    reemplazo) apk="$OUT/Laucher-8227L-reemplazo.apk" ;;
+    normal)    apk="$OUT/Laucher-8227L.apk" ;;
+    *) echo "Variante desconocida: $variant (normal | reemplazo | ambas)"; exit 2 ;;
   esac
   echo "=== Variante: $variant → $apk"
   rm -rf "$B" && mkdir -p "$B/gen" "$B/classes" "$B/dex" "$B/tools" "$OUT"
 
   manifest=AndroidManifest.xml
-  if [ "$variant" = prueba ]; then
+  if [ "$variant" = normal ]; then
     # App normal: sin uid system ni persistente, con icono en el cajón y nombre distinto.
     # El paquete se renombra en aapt2 link; el código detecta la variante en tiempo de ejecución (BuildInfo).
     manifest="$B/AndroidManifest.xml"
@@ -107,6 +107,6 @@ EOF
 }
 
 case "$VARIANT" in
-  ambas) build_one reemplazo; echo; build_one prueba ;;
+  ambas) build_one reemplazo; echo; build_one normal ;;
   *) build_one "$VARIANT" ;;
 esac

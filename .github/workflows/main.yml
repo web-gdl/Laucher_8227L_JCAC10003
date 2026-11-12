@@ -23,19 +23,19 @@ jobs:
       - name: Descargar herramientas
         run: ./tools/get-tools.sh
 
-      - name: Compilar las dos variantes (prueba y reemplazo)
+      - name: Compilar las dos variantes (normal y reemplazo)
         run: ./build.sh --variant ambas
 
-      - name: Guardar APK de prueba (convive con el launcher de fábrica)
+      - name: Guardar APK principal (convive con el launcher de fábrica)
         uses: actions/upload-artifact@v4
         with:
-          name: launcher-PRUEBA-apk
-          path: out/launcher-prueba.apk
+          name: Laucher-8227L-apk
+          path: out/Laucher-8227L.apk
           if-no-files-found: error
 
       - name: Guardar APK de reemplazo (sustituye al de fábrica)
         uses: actions/upload-artifact@v4
         with:
-          name: launcher-reemplazo-apk
-          path: out/launcher-nativo.apk
+          name: Laucher-8227L-reemplazo-apk
+          path: out/Laucher-8227L-reemplazo.apk
           if-no-files-found: error

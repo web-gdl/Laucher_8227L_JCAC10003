@@ -1,4 +1,4 @@
-# Launcher nativo para autoestéreos Android «Jancar» (alps 8227L · JCAC10003)
+# Laucher 8227L: launcher nativo para autoestéreos Android «Jancar» (alps 8227L · JCAC10003)
 
 [![Compilar APK](https://github.com/web-gdl/Laucher_8227L_JCAC10003/actions/workflows/main.yml/badge.svg)](https://github.com/web-gdl/Laucher_8227L_JCAC10003/actions/workflows/main.yml)
 [![Licencia: dominio público](https://img.shields.io/badge/licencia-dominio%20p%C3%BAblico-brightgreen)](LICENSE)
@@ -30,19 +30,20 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 
 ## Estado del proyecto
 
-**Versión actual: 3.5.0** (noviembre de 2026): velocímetro, brújula, odómetro y aviso de límite de velocidad, ver [`CHANGELOG.md`](CHANGELOG.md).
-Pendiente de probar en el equipo; la última versión probada es la **3.4.0**. Probado por el autor en su JCAC10003 con la variante de prueba:
+**Versión estable: 3.5.1** (noviembre de 2026): versión definitiva con velocímetro, brújula, odómetro y aviso de límite de velocidad,
+ver [`CHANGELOG.md`](CHANGELOG.md). En uso diario por el autor en su JCAC10003 con la variante normal (`Laucher-8227L.apk`):
 
-- ✅ Inicio nocturno con la música al centro, dock de favoritos y panel de aplicaciones sin recuadros.
+- ✅ Inicio nocturno con música e instrumentos, dock de favoritos y panel de aplicaciones sin recuadros.
 - ✅ Widget de música con apps de terceros (RadilloPlayerWave) y fondo con los colores de la portada.
 - ✅ La música vuelve al encender el auto (el estéreo despierta, no reinicia).
-- ⏳ Instrumentos del GPS (3.5.0): la lógica de distancia y del aviso pasa pruebas con recorridos simulados; falta probarla en carretera.
+- ✅ Velocímetro, brújula, odómetro y aviso de límite de velocidad con el GPS del estéreo (además, la lógica de distancia y del aviso
+  pasa pruebas automáticas con recorridos simulados en cada cambio).
 - ⏳ Variante de reemplazo (`com.android.launcher3`): compila y es la misma base, pero el autor no la ha instalado.
 - ⏳ Consumo de memoria: el informe de Diagnóstico ya muestra el desglose; queda medirlo en el equipo para recortar lo que haga falta.
 
 **Límites conocidos**
 
-- Al apagar el auto, el servicio del estéreo cierra la variante de prueba (no está en su lista de paquetes protegidos);
+- Al apagar el auto, el servicio del estéreo cierra la variante normal (no está en su lista de paquetes protegidos);
   al encender se vuelve a abrir sola como pantalla de inicio. La de reemplazo no tiene ese problema.
 - Los códigos del servicio `com.jancar.services` salen del firmware de este equipo; otro firmware podría cambiarlos.
 - El estéreo no lee los datos del auto (no tiene OBD): velocidad, rumbo y kilómetros salen de **su GPS**. El «Total» cuenta
@@ -57,33 +58,36 @@ El historial completo está en [`CHANGELOG.md`](CHANGELOG.md). El diseño se eli
 
 | Archivo | Para qué sirve |
 |---|---|
-| **[launcher-prueba.apk](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/launcher-prueba.apk)** | **Empieza por aquí.** Se instala como una app normal y convive con el launcher de fábrica. Se quita como cualquier app. |
-| [launcher-reemplazo.apk](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/launcher-reemplazo.apk) | Sustituye al launcher de fábrica (necesita `adb`). Hereda privilegios de sistema. Solo para quien sepa revertirlo. |
+| **[Laucher-8227L.apk](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk)** | **La versión para instalar.** Se instala como una app normal y convive con el launcher de fábrica. Se quita como cualquier app. |
+| [Laucher-8227L-reemplazo.apk](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L-reemplazo.apk) | Sustituye al launcher de fábrica (necesita `adb`). Hereda privilegios de sistema. Solo para quien sepa revertirlo. |
 | [SHA256SUMS.txt](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/SHA256SUMS.txt) | Sumas de verificación de los APK. |
 
 Todas las versiones: [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases).
 Cada APK se compila en GitHub Actions a partir de este código; puedes compilarlo tú mismo (ver más abajo).
 
-## Instalación de la versión de prueba
+## Instalación
 
-1. Copia `launcher-prueba.apk` al estéreo (memoria USB) y ábrelo con un explorador de archivos; permite «instalar apps desconocidas» si lo pide.
-   También sirve `adb install launcher-prueba.apk`.
-2. Aparece como **«Inicio (prueba)»**. Pulsa el botón **Inicio** del estéreo y, cuando pregunte qué launcher usar, elige *Inicio (prueba)* → **«Solo una vez»**.
-3. Con «Solo una vez», la próxima vez que pulses Inicio el estéreo te vuelve a preguntar, así que siempre puedes elegir el launcher de fábrica. Para quitarlo, desinstálalo como cualquier app.
+1. Copia `Laucher-8227L.apk` al estéreo (memoria USB) y ábrelo con un explorador de archivos; permite «instalar apps desconocidas» si lo pide.
+   También sirve `adb install -r Laucher-8227L.apk`. Si ya tenías una versión anterior («Inicio (prueba)»), se instala encima y conserva tus favoritos.
+2. Aparece como **«Laucher 8227L»**. Pulsa el botón **Inicio** del estéreo y, cuando pregunte qué launcher usar, elige *Laucher 8227L* →
+   **«Siempre»** para dejarlo como pantalla de inicio (o «Solo una vez» si quieres seguir eligiendo).
+3. La primera vez pide el **permiso de ubicación** (para el velocímetro y el odómetro). Después toca *Total* → *Ajustar total* y escribe los km del tablero,
+   y toca el velocímetro para fijar tu límite de velocidad.
+4. Para volver al de fábrica: Ajustes → Aplicaciones → Laucher 8227L → *Borrar valores predeterminados*, o desinstálalo como cualquier app.
 
-La versión de prueba no toca nada del sistema: no es persistente, no usa el usuario de sistema y no pide a la «app de memoria» que arranque con el coche.
+Esta variante no toca nada del sistema: no es persistente, no usa el usuario de sistema y no pide a la «app de memoria» que arranque con el coche.
 
 ## Instalación de la versión de reemplazo (avanzado)
 
 Usa el mismo paquete (`com.android.launcher3`) y la firma de plataforma que el de fábrica, así que se instala **como actualización**:
 
 ```
-adb install -r launcher-reemplazo.apk
+adb install -r Laucher-8227L-reemplazo.apk
 adb uninstall com.android.launcher3     # revertir (vuelve el launcher de fábrica si estaba en /system)
 ```
 
 Con ella el estéreo vuelve a abrir la última app de música unos segundos después de arrancar, igual que el launcher de fábrica.
-Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
+Si no estás seguro de poder revertirla, **no la instales**: usa `Laucher-8227L.apk`.
 
 ## Qué hace
 
@@ -95,7 +99,7 @@ Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
     El número se pone rojo. «Desactivar» lo quita.
   - **Odómetro**: tócalo para *Reiniciar viaje a 0*, *Ajustar viaje* o *Ajustar total* (al número del tablero del auto). Atajos: pulsación larga en Viaje para reiniciarlo, en Total para ajustarlo.
   - Se descartan posiciones imprecisas, el «baile» del GPS con el auto parado y los saltos imposibles. Se mide solo con el auto encendido; una notificación
-    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. La variante de prueba pide el permiso de ubicación una vez.
+    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. La variante normal pide el permiso de ubicación una vez.
 - **Música** con título, artista, portada redonda, fondo con sus colores, progreso, tiempos y anterior / play‑pausa / siguiente. Funciona con las fuentes de fábrica (música, radio,
   vídeo, Bluetooth) y con **apps de terceros**: para estas obtiene el paquete, el estado y la posición de la sesión multimedia de Android, de modo que
   al tocar la portada o el título se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
@@ -150,8 +154,8 @@ Sin Gradle ni Android Studio. Necesitas JDK 17+, Python 3, `curl` y `unzip`.
 
 ```
 ./tools/get-tools.sh              # android.jar 27, aapt2, jadx/D8/apksig y claves de plataforma AOSP
-./build.sh --variant prueba       # out/launcher-prueba.apk
-./build.sh --variant reemplazo    # out/launcher-nativo.apk
+./build.sh --variant normal       # out/Laucher-8227L.apk
+./build.sh --variant reemplazo    # out/Laucher-8227L-reemplazo.apk
 ./build.sh --variant ambas
 ```
 
@@ -209,6 +213,6 @@ It replaces the factory launcher with a single-activity, ~80 KB, ~26 MB-PSS app 
 through its own binder client. Third-party music apps are supported through Android media sessions. Since 3.5 it also shows a GPS speedometer (green→yellow→red),
 a compass and trip/total odometers, with a spoken warning when you exceed a speed limit you set (tap the speedometer).
 
-**Download:** [`launcher-prueba.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/launcher-prueba.apk) (installs like a normal app, safe to try) ·
-[`launcher-reemplazo.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/launcher-reemplazo.apk) (replaces the factory launcher, needs `adb`).
-Tested only on one JCAC10003. APKs are signed with the public AOSP platform test key (see *Seguridad*). Public domain (Unlicense); provided as is, with no warranty.
+**Download (stable 3.5.1):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
+[`Laucher-8227L-reemplazo.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L-reemplazo.apk) (replaces the factory launcher, needs `adb`).
+In daily use on one JCAC10003. APKs are signed with the public AOSP platform test key (see *Seguridad*). Public domain (Unlicense); provided as is, with no warranty.

@@ -2,6 +2,18 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.5.1: versión definitiva «Laucher 8227L»
+
+Publicada como versión estable (deja de ser «de prueba»).
+
+- Los APK se llaman **`Laucher-8227L.apk`** (la versión para instalar) y **`Laucher-8227L-reemplazo.apk`**.
+  Enlaces fijos: `releases/latest/download/Laucher-8227L.apk` y `.../Laucher-8227L-reemplazo.apk`.
+- La app aparece como **«Laucher 8227L»** (antes «Inicio (prueba)»). Mismo paquete `com.webgdl.launcher8227`: se instala encima
+  de la anterior y conserva favoritos, odómetro y límite.
+- La variante de compilación se llama `normal` (`./build.sh --variant normal`; `prueba` sigue aceptándose).
+- Release marcada como estable y última; las pruebas automáticas también corren antes de publicar.
+- README, Diagnóstico e imágenes actualizados.
+
 ## 3.5.0: velocidad, brújula, odómetro y límite de velocidad
 
 Pendiente de probar en el equipo.

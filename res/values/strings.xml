@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Inicio</string>
-    <string name="app_name_test">Inicio (prueba)</string>
+    <string name="app_name_test">Laucher 8227L</string>
 
     <!-- Pantalla principal -->
     <string name="all_apps">Aplicaciones</string>

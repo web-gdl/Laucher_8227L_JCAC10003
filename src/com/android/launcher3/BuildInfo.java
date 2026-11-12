@@ -9,7 +9,7 @@ import android.content.pm.PackageManager;
  *
  * Variantes (las decide build.sh):
  *  - reemplazo: paquete com.android.launcher3, uid system, persistente; sustituye al launcher de fábrica.
- *  - prueba:    paquete com.webgdl.launcher8227, app normal; convive con el de fábrica.
+ *  - normal:    paquete com.webgdl.launcher8227, app normal; convive con el de fábrica.
  */
 public final class BuildInfo {
     /** Paquete del launcher de fábrica; solo con él se heredan los privilegios de sistema. */
@@ -38,5 +38,5 @@ public final class BuildInfo {
         return replacement;
     }
 
-    public static String variant(Context ctx) { return isReplacement(ctx) ? "reemplazo" : "prueba"; }
+    public static String variant(Context ctx) { return isReplacement(ctx) ? "reemplazo" : "normal"; }
 }

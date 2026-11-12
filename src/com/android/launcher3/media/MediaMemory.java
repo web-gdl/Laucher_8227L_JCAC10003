@@ -24,7 +24,7 @@ import com.android.launcher3.jancar.MediaState;
  * de arrancar, y el servicio abre la última app de música con el extra {@code boot_memory=true}
  * (RadilloPlayerWave y la música de fábrica restauran entonces su cola y siguen sonando). Si nuestro
  * launcher es la pantalla de inicio, eso ya no ocurre; y el servicio parece comprobar que la actividad
- * superior sea {@code com.android.launcher3}, así que la variante de prueba abre la app ella misma.
+ * superior sea {@code com.android.launcher3}, así que la variante normal abre la app ella misma.
  *
  * Vive en el proceso (no en la Activity) para seguir el estado aunque otra app esté en primer plano.
  */

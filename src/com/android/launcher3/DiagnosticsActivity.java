@@ -38,7 +38,7 @@ public final class DiagnosticsActivity extends Activity {
         LauncherApp app = LauncherApp.get();
         JancarBridge bridge = app.bridge();
         StringBuilder sb = new StringBuilder(4096);
-        sb.append("Launcher nativo ").append(BuildInfo.version(this)).append(" · variante ").append(BuildInfo.variant(this)).append(' ').append(getPackageName()).append('\n');
+        sb.append("Laucher 8227L ").append(BuildInfo.version(this)).append(" · variante ").append(BuildInfo.variant(this)).append(' ').append(getPackageName()).append('\n');
         sb.append("Proceso activo: ").append(app.uptimeMs() / 1000).append(" s\n\n");
 
         sb.append("== Memoria ==\n");

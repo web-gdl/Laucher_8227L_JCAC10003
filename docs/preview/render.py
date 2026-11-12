@@ -156,27 +156,27 @@ def apps_panel():
 
 
 def diag():
-    txt = """Launcher nativo 3.0.0-nativo (2021) · variante prueba com.webgdl.launcher8227
+    txt = """Laucher 8227L 3.5.1-nativo (2029) · variante normal com.webgdl.launcher8227
 Proceso activo: 1284 s
 
 == Memoria ==
-Heap Java: 1.7 MB usados / 5.9 MB reservados (máx 192.0 MB)
-Heap nativo: 7.8 MB
-PSS total del proceso: 26.1 MB
-Sistema: 414 MB libres de 1024 MB (umbral 96 MB)
-Caché de iconos: 8 bitmaps, 162 KB
-Apps lanzables: 29 (escaneos: 1)
+Heap Java: 1.9 MB usados / 6.1 MB reservados (máx 192.0 MB)
+PSS total del proceso: 27.4 MB
+Sistema: 402 MB libres de 1024 MB (umbral 96 MB)
 
 == Servicios com.jancar.services ==
-media: conectado (conexiones=1, intento=0, última=1283 s)
-system: conectado (conexiones=1, intento=0, última=1283 s)
-car: conectado (conexiones=1, intento=0, última=1283 s)
+media: conectado · system: conectado · car: conectado
 ACC: ON · cámara reversa: 0
 Media: type=20 state=3 title='Camino de noche' artist='Artista de ejemplo'
 Sesiones multimedia: activa · 2 sesiones vistas, 5 cambios
+GPS: OK · 1270 posiciones (14 descartadas) · precisión 6 m · satélites 9
+  velocidad 72 km/h · rumbo 45° NE · viaje 18.40 km · total 48213.4 km
+Aviso de velocidad: límite 110 km/h · 0 avisos · voz lista
 
 == Registro ==
 08:21:14 bridge: media conectado
+08:21:15 gps: inicio, estado SEARCHING
+08:21:15 gps: límite de velocidad 110 km/h
 08:21:14 sesiones: fuente com.ejemplo.player estado 3"""
     btn = lambda t, a=False: (f'<div style="height:44px;padding:0 18px;margin-left:10px;border-radius:16px;display:flex;align-items:center;'
                               f'font-size:14px;background:{C["accent"] if a else C["surface"]};color:{C["bg"] if a else C["text"]}">{t}</div>')

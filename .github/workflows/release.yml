@@ -3,8 +3,8 @@ name: Publicar APK
 # Publica una Release con los APK adjuntos cuando cambia el archivo VERSION en main (o al subir una etiqueta v*).
 # Para sacar una versión nueva: edita VERSION (p. ej. 3.0.1) y haz push; la etiqueta v3.0.1 se crea sola.
 # Enlaces fijos a la última versión:
-#   .../releases/latest/download/launcher-prueba.apk
-#   .../releases/latest/download/launcher-reemplazo.apk
+#   .../releases/latest/download/Laucher-8227L.apk
+#   .../releases/latest/download/Laucher-8227L-reemplazo.apk
 on:
   push:
     branches: [ main ]
@@ -29,14 +29,16 @@ jobs:
       - name: Descargar herramientas
         run: ./tools/get-tools.sh
 
+      - name: Pruebas del odómetro y del límite de velocidad
+        run: ./test/run.sh
+
       - name: Compilar las dos variantes
         run: ./build.sh --variant ambas
 
       - name: Nombrar los archivos y calcular sumas
         run: |
           mkdir -p dist
-          cp out/launcher-prueba.apk dist/launcher-prueba.apk
-          cp out/launcher-nativo.apk dist/launcher-reemplazo.apk
+          cp out/Laucher-8227L.apk out/Laucher-8227L-reemplazo.apk dist/
           cd dist && sha256sum *.apk | tee SHA256SUMS.txt
 
       - name: Versión
@@ -50,16 +52,20 @@ jobs:
         with:
           tag_name: v${{ steps.ver.outputs.v }}
           target_commitish: ${{ github.sha }}
-          name: Launcher nativo v${{ steps.ver.outputs.v }}
+          name: Laucher 8227L v${{ steps.ver.outputs.v }}
+          prerelease: false
+          make_latest: true
           generate_release_notes: true
           body: |
             ## Qué descargar
-            - **`launcher-prueba.apk`** — empieza por este. Se instala como una app normal y convive con el launcher de fábrica.
-            - **`launcher-reemplazo.apk`** — sustituye al launcher de fábrica (necesita `adb`). Solo para quien sepa revertirlo.
+            - **`Laucher-8227L.apk`** — la versión para instalar. Se instala como una app normal y convive con el launcher de fábrica.
+            - **`Laucher-8227L-reemplazo.apk`** — sustituye al launcher de fábrica (necesita `adb`). Solo para quien sepa revertirlo.
+
+            Novedades en el [historial de cambios](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md).
 
             Guía de instalación y capturas en el [README](https://github.com/${{ github.repository }}#readme).
             Dominio público (Unlicense).
           files: |
-            dist/launcher-prueba.apk
-            dist/launcher-reemplazo.apk
+            dist/Laucher-8227L.apk
+            dist/Laucher-8227L-reemplazo.apk
             dist/SHA256SUMS.txt
