@@ -2,6 +2,27 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.5.0: velocidad, brújula, odómetro y límite de velocidad
+
+Pendiente de probar en el equipo.
+
+- Inicio con el **diseño A** (elegido entre 5 muestras): música a la izquierda y, a la derecha, una tarjeta translúcida con
+  los instrumentos. Portada 150 dp, título 32 sp y controles dentro de la columna de la música.
+- **Velocímetro** de arco 0–180 km/h con **degradado verde → amarillo → rojo**, a partir del GPS del estéreo (velocidad Doppler; si no
+  la trae, distancia/tiempo). «--» sin señal.
+- **Límite de velocidad**: tocar el velocímetro → escribir los km/h (10–250) o «Desactivar». Marca roja en el arco, número en rojo
+  al pasarlo y **aviso de voz** «Está excediendo el límite de velocidad» tras 2 s por encima; se repite cada 30 s y se rearma al bajar
+  3 km/h del límite. Voz del sistema (TextToSpeech) por el canal de navegación; si no hay voz en el idioma, pitido.
+- **Brújula** con rumbo del GPS (solo en movimiento; parado conserva el último) y texto «NE 45°».
+- **Odómetro** de viaje y total, guardado cada minuto y al apagar el auto. Tocarlo abre: *Reiniciar viaje a 0*, *Ajustar viaje*,
+  *Ajustar total*. Pulsación larga: reiniciar viaje / ajustar total directamente.
+- Filtros de la distancia: precisión ≤ 30 m, el auto parado no suma (el punto «baila»), saltos > 260 km/h descartados, tramo nuevo
+  tras perder la señal. Pruebas con recorridos simulados en `test/` (error < 2 % a 50–60 km/h y 0 m parado).
+- Servicio en primer plano `TripService` (notificación silenciosa «Odómetro») solo con el ACC encendido: Android 8 limita el GPS
+  de las apps en segundo plano. Nuevo permiso `ACCESS_FINE_LOCATION` (la variante de prueba lo pide una vez; tocar la tarjeta lleva
+  a concederlo o a encender el GPS).
+- Diagnóstico: líneas «GPS» (estado, posiciones, precisión, satélites) y «Aviso de velocidad».
+
 ## 3.4.0: panel más limpio y código revisado
 
 Probada en el JCAC10003 (25-oct-2026): todo correcto.

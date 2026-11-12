@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inicio «nocturno» (la variación 2 es la implementada en res/layout/activity_home.xml) y sus variaciones.
 
-Genera docs/screenshots/01..03 (render del diseño, no capturas del equipo) y docs/bocetos/nocturno-*.png.
+Genera docs/screenshots/03 (render del diseño, no capturas del equipo) y docs/bocetos/nocturno-*.png.
     pip install playwright pillow && python3 docs/preview/nocturno.py
 """
 import pathlib, sys
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     OUT.mkdir(parents=True, exist_ok=True)
     SHOTS.mkdir(parents=True, exist_ok=True)
     jobs = [(OUT / "nocturno-1-fiel.png", v1), (OUT / "nocturno-2-musica-al-centro.png", v2), (OUT / "nocturno-3-reloj-y-musica.png", v3),
-            (SHOTS / "01-inicio-reproduciendo.png", lambda: v2(True)), (SHOTS / "02-inicio-reposo.png", v2_idle), (SHOTS / "03-todas-las-apps.png", apps_panel)]
+            (SHOTS / "03-todas-las-apps.png", apps_panel)]  # 01, 02 y 05 los genera instrumentos.py
     with sync_playwright() as p:
         b = p.chromium.launch()
         pg = b.new_page(viewport={"width": 1024, "height": 600}, device_scale_factor=1)

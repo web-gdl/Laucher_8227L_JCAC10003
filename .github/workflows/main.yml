@@ -17,6 +17,9 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: Pruebas del odómetro y del límite de velocidad
+        run: ./test/run.sh
+
       - name: Descargar herramientas
         run: ./tools/get-tools.sh
 

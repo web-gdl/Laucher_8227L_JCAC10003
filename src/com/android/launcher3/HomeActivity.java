@@ -5,45 +5,63 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
+import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.launcher3.car.GpsTracker;
+import com.android.launcher3.car.Trip;
+import com.android.launcher3.car.TripService;
 import com.android.launcher3.jancar.JancarBridge;
 import com.android.launcher3.jancar.MediaState;
 import com.android.launcher3.media.MediaMemory;
 import com.android.launcher3.media.SessionProbe;
+import com.android.launcher3.ui.CompassView;
 import com.android.launcher3.ui.MediaWidget;
+import com.android.launcher3.ui.SpeedGaugeView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 /**
- * Única pantalla: inicio «nocturno» (música al centro + dock de favoritos) y el panel de todas las
+ * Única pantalla: inicio «nocturno» (música + instrumentos del GPS + dock de favoritos) y el panel de todas las
  * apps, que es una vista superpuesta dentro de la misma Activity (sin segunda Activity ni animaciones).
  *
  * La hora y el estado (Wi-Fi, Bluetooth, GPS, USB) no se dibujan: ya los muestra la barra del sistema.
  */
-public final class HomeActivity extends Activity implements AppsRepository.Listener, JancarBridge.Listener, SessionProbe.Listener {
+public final class HomeActivity extends Activity implements AppsRepository.Listener, JancarBridge.Listener, SessionProbe.Listener, GpsTracker.Listener {
+
+    private static final int REQ_LOCATION = 1;
 
     private Prefs prefs;
     private AppsRepository apps;
     private JancarBridge bridge;
     private SessionProbe sessions;
     private MediaMemory memory;
+    private GpsTracker gps;
+
+    private SpeedGaugeView speedGauge;
+    private CompassView compass;
+    private TextView headingText, gpsStatus, odoTrip, odoTotal;
+    private String lastTrip, lastTotal, lastHeading;
+    private boolean askedLocation;
 
     private View homeRoot;
     private View appsPanel;
@@ -75,6 +93,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         bridge = app.bridge();
         sessions = app.sessions();
         memory = app.memory();
+        gps = app.gps();
         favKeys = new ArrayList<>(prefs.getFavorites());
         hidden = prefs.getHidden();
         showHidden = prefs.getShowHidden();
@@ -105,6 +124,20 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
             return true;
         });
 
+        speedGauge = findViewById(R.id.speed_gauge);
+        compass = findViewById(R.id.compass);
+        headingText = findViewById(R.id.heading);
+        gpsStatus = findViewById(R.id.gps_status);
+        odoTrip = findViewById(R.id.odo_trip);
+        odoTotal = findViewById(R.id.odo_total);
+        findViewById(R.id.gauges_card).setOnClickListener(v -> onGaugesTapped());
+        // Velocímetro: límite de velocidad. Odómetro: reiniciar o ajustar (pulsación larga: atajos directos).
+        speedGauge.setOnClickListener(v -> { if (!fixGps()) editSpeedLimit(); });
+        findViewById(R.id.odo_trip_box).setOnClickListener(v -> showOdometerMenu());
+        findViewById(R.id.odo_total_box).setOnClickListener(v -> showOdometerMenu());
+        findViewById(R.id.odo_trip_box).setOnLongClickListener(v -> { confirmResetTrip(); return true; });
+        findViewById(R.id.odo_total_box).setOnLongClickListener(v -> { editTotal(); return true; });
+
         mediaCard.setOnClickListener(v -> openMediaApp());
         mediaCard.setOnLongClickListener(v -> { chooseMediaApp(); return true; });
         findViewById(R.id.media_play).setOnClickListener(v -> {
@@ -134,8 +167,11 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         apps.addListener(this);
         bridge.addListener(this);
         sessions.addListener(this);
+        gps.addListener(this);
         onAppsChanged(apps.getApps());
         renderMedia();
+        ensureGps();
+        onGpsChanged(gps);
     }
 
     @Override protected void onResume() {
@@ -158,6 +194,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         apps.removeListener(this);
         bridge.removeListener(this);
         sessions.removeListener(this);
+        gps.removeListener(this);
         // Fuera de la pantalla de inicio: deja en caché solo la mitad de los iconos (los del dock vuelven al instante).
         apps.trimIcons(false);
         super.onStop();
@@ -188,6 +225,154 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         } catch (SecurityException e) {
             Diag.warn("home", "Settings.Global (¿sin uid system?)", e);
         }
+    }
+
+    // ------------------------------------------------------------------ instrumentos (GPS)
+
+    /** Con permiso y el auto encendido, que el servicio esté midiendo; sin permiso, pedirlo una vez por arranque. */
+    private void ensureGps() {
+        if (gps.hasPermission()) {
+            if (!gps.isRunning() && bridge.isAccOn()) TripService.start(this);
+        } else if (!askedLocation) {
+            askedLocation = true;
+            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION);
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
+        if (requestCode != REQ_LOCATION) return;
+        boolean ok = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
+        Diag.log("gps", "permiso de ubicación " + (ok ? "concedido" : "denegado"));
+        if (ok) TripService.start(this);
+        onGpsChanged(gps);
+    }
+
+    private void onGaugesTapped() { fixGps(); }
+
+    /** Si falta el permiso o el GPS está apagado, lleva a resolverlo y devuelve true. */
+    private boolean fixGps() {
+        switch (gps.state()) {
+            case NO_PERMISSION:
+                if (shouldShowRequestPermissionRationale(android.Manifest.permission.ACCESS_FINE_LOCATION) || !askedLocation) {
+                    askedLocation = true;
+                    requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION);
+                } else {
+                    // «No volver a preguntar»: solo queda la pantalla de la app en Ajustes
+                    tryStart(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
+                }
+                break;
+            case DISABLED:
+                tryStart(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                break;
+            default:
+                return false;
+        }
+        return true;
+    }
+
+    private void tryStart(Intent i) {
+        try { startActivity(i); } catch (ActivityNotFoundException | SecurityException e) { Diag.warn("gps", "abrir ajustes", e); }
+    }
+
+    @Override public void onGpsChanged(GpsTracker g) {
+        GpsTracker.State st = g.state();
+        speedGauge.setSpeed(g.speedKmh());
+        speedGauge.setLimit(LauncherApp.get().speedAlert().limitKmh());
+        float b = g.bearing();
+        compass.setHeading(b);
+        String heading = b < 0 ? "—" : Trip.cardinal(b) + " " + Math.round(b) + "°";
+        if (!heading.equals(lastHeading)) { lastHeading = heading; headingText.setText(heading); }
+        String trip = getString(R.string.km_format, String.format(Locale.US, "%.1f", g.tripKm()));
+        if (!trip.equals(lastTrip)) { lastTrip = trip; odoTrip.setText(trip); }
+        String total = getString(R.string.km_format, formatThousands(Math.round(Math.floor(g.totalKm()))));
+        if (!total.equals(lastTotal)) { lastTotal = total; odoTotal.setText(total); }
+        int msg = st == GpsTracker.State.NO_PERMISSION ? R.string.gps_no_permission
+                : st == GpsTracker.State.DISABLED ? R.string.gps_disabled
+                : st == GpsTracker.State.SEARCHING && g.isRunning() ? R.string.gps_searching : 0;
+        if (msg == 0) {
+            if (gpsStatus.getVisibility() != View.GONE) gpsStatus.setVisibility(View.GONE);
+        } else {
+            gpsStatus.setText(msg);
+            gpsStatus.setVisibility(View.VISIBLE);
+        }
+    }
+
+    /** 48213 → «48 213» (espacio fino, igual en español e inglés). */
+    private static String formatThousands(long v) {
+        String s = Long.toString(v);
+        StringBuilder sb = new StringBuilder(s.length() + 4);
+        for (int i = 0; i < s.length(); i++) {
+            if (i > 0 && (s.length() - i) % 3 == 0) sb.append('\u202F');
+            sb.append(s.charAt(i));
+        }
+        return sb.toString();
+    }
+
+    private void confirmResetTrip() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.odo_reset_title)
+                .setMessage(R.string.odo_reset_msg)
+                .setPositiveButton(R.string.odo_reset, (d, w) -> gps.resetTrip())
+                .setNegativeButton(R.string.cancel_btn, null)
+                .show();
+    }
+
+    private void showOdometerMenu() {
+        CharSequence[] items = {getString(R.string.odo_menu_reset_trip), getString(R.string.odo_menu_set_trip), getString(R.string.odo_menu_set_total)};
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.odo_menu_title)
+                .setItems(items, (d, which) -> {
+                    if (which == 0) confirmResetTrip();
+                    else if (which == 1) editTrip();
+                    else editTotal();
+                })
+                .setNegativeButton(R.string.cancel_btn, null)
+                .show();
+    }
+
+    private void editTrip() {
+        askNumber(R.string.odo_trip_title, R.string.odo_trip_msg, String.format(Locale.US, "%.1f", gps.tripKm()), true, R.string.odo_save,
+                v -> { if (v >= 0 && v < 1_000_000) gps.setTripKm(v); }, 0, null);
+    }
+
+    private void editTotal() {
+        askNumber(R.string.odo_total_title, R.string.odo_total_msg, String.valueOf((long) Math.floor(gps.totalKm())), false, R.string.odo_save,
+                v -> { if (v >= 0 && v < 10_000_000) gps.setTotalKm(Math.floor(v)); }, 0, null);
+    }
+
+    private void editSpeedLimit() {
+        final com.android.launcher3.car.SpeedAlert alert = LauncherApp.get().speedAlert();
+        int cur = alert.limitKmh();
+        askNumber(R.string.limit_title, R.string.limit_msg, String.valueOf(cur > 0 ? cur : 110), false, R.string.odo_save,
+                v -> { if (v >= 10 && v <= 250) { alert.setLimitKmh((int) v); onGpsChanged(gps); } },
+                R.string.limit_off, () -> { alert.setLimitKmh(0); onGpsChanged(gps); });
+    }
+
+    private interface NumberCallback { void onNumber(double value); }
+
+    /** Diálogo con un campo numérico; botón neutral opcional (p. ej. «Desactivar»). */
+    private void askNumber(int title, int message, String initial, boolean decimal, int okText, NumberCallback ok,
+                           int neutralText, Runnable neutral) {
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER | (decimal ? InputType.TYPE_NUMBER_FLAG_DECIMAL : 0));
+        input.setText(initial);
+        input.setSelectAllOnFocus(true);
+        input.setTextSize(24);
+        int pad = Math.round(20 * getResources().getDisplayMetrics().density);
+        LinearLayout box = new LinearLayout(this);
+        box.setPadding(pad, 0, pad, 0);
+        box.addView(input, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        AlertDialog.Builder b = new AlertDialog.Builder(this)
+                .setTitle(title)
+                .setMessage(message)
+                .setView(box)
+                .setPositiveButton(okText, (d, w) -> {
+                    try { ok.onNumber(Double.parseDouble(input.getText().toString().trim().replace(',', '.'))); }
+                    catch (NumberFormatException ignored) {}
+                })
+                .setNegativeButton(R.string.cancel_btn, null);
+        if (neutral != null) b.setNeutralButton(neutralText, (d, w) -> neutral.run());
+        b.show();
     }
 
     // ------------------------------------------------------------------ navegación interna

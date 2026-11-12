@@ -6,7 +6,8 @@
 Un launcher (pantalla de inicio) **ligero, estable y 100 % nativo** para los autoestéreos Android baratos con el
 chip MediaTek **AC8227L** y el software de Jancar, como el **JCAC10003**: 1 GB de RAM, pantalla de 1024×600.
 Sustituye al launcher de fábrica sin skins ni temas, usa unos 26 MB de memoria y se entiende con los servicios
-del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún SDK del fabricante.
+del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún SDK del fabricante. Desde la 3.5 muestra
+**velocidad, brújula y odómetro** con el GPS del estéreo, con **aviso de voz** al pasar el límite de velocidad que elijas.
 
 > **Es un regalo para quien lo quiera usar.** Dominio público: cópialo, modifícalo, véndelo, mejóralo. Sin permiso, sin atribución.
 
@@ -16,22 +17,26 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 </p>
 <p align="center">
   <img src="docs/screenshots/03-todas-las-apps.png" width="49%" alt="Panel de todas las aplicaciones">
+  <img src="docs/screenshots/05-limite-de-velocidad.png" width="49%" alt="Velocímetro por encima del límite de 110 km/h">
+</p>
+<p align="center">
   <img src="docs/screenshots/04-diagnostico.png" width="49%" alt="Pantalla de diagnóstico">
 </p>
 
 > Las imágenes son un **render del diseño** a 1024×600 con datos de ejemplo (mismo layout, colores, medidas y vectores
 > que `res/`), no capturas del equipo ni los iconos reales de tus apps. La barra superior es la del sistema del estéreo,
-> no la dibuja el launcher. Se regeneran con [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
+> no la dibuja el launcher. Se regeneran con [`docs/preview/instrumentos.py`](docs/preview/instrumentos.py), [`docs/preview/nocturno.py`](docs/preview/nocturno.py) y
 > [`docs/preview/render.py`](docs/preview/render.py). ¿Tienes capturas reales de tu estéreo? Se aceptan con gusto.
 
 ## Estado del proyecto
 
-**Versión estable: 3.4.0** (octubre de 2026; panel más limpio y código revisado, ver [`CHANGELOG.md`](CHANGELOG.md)).
-Probada por el autor en su JCAC10003 con la variante de prueba:
+**Versión actual: 3.5.0** (noviembre de 2026): velocímetro, brújula, odómetro y aviso de límite de velocidad, ver [`CHANGELOG.md`](CHANGELOG.md).
+Pendiente de probar en el equipo; la última versión probada es la **3.4.0**. Probado por el autor en su JCAC10003 con la variante de prueba:
 
 - ✅ Inicio nocturno con la música al centro, dock de favoritos y panel de aplicaciones sin recuadros.
 - ✅ Widget de música con apps de terceros (RadilloPlayerWave) y fondo con los colores de la portada.
 - ✅ La música vuelve al encender el auto (el estéreo despierta, no reinicia).
+- ⏳ Instrumentos del GPS (3.5.0): la lógica de distancia y del aviso pasa pruebas con recorridos simulados; falta probarla en carretera.
 - ⏳ Variante de reemplazo (`com.android.launcher3`): compila y es la misma base, pero el autor no la ha instalado.
 - ⏳ Consumo de memoria: el informe de Diagnóstico ya muestra el desglose; queda medirlo en el equipo para recortar lo que haga falta.
 
@@ -40,6 +45,8 @@ Probada por el autor en su JCAC10003 con la variante de prueba:
 - Al apagar el auto, el servicio del estéreo cierra la variante de prueba (no está en su lista de paquetes protegidos);
   al encender se vuelve a abrir sola como pantalla de inicio. La de reemplazo no tiene ese problema.
 - Los códigos del servicio `com.jancar.services` salen del firmware de este equipo; otro firmware podría cambiarlos.
+- El estéreo no lee los datos del auto (no tiene OBD): velocidad, rumbo y kilómetros salen de **su GPS**. El «Total» cuenta
+  desde que instalas la 3.5; ajústalo una vez al número del tablero. La brújula solo sabe el rumbo en movimiento.
 - Las imágenes del README son renders del diseño, no capturas.
 
 El historial completo está en [`CHANGELOG.md`](CHANGELOG.md). El diseño se eligió entre 20 propuestas, que están en [`docs/bocetos/`](docs/bocetos/).
@@ -80,7 +87,15 @@ Si no estás seguro de poder revertirla, **no la instales**: usa la de prueba.
 
 ## Qué hace
 
-- **Inicio** de una sola pantalla: la música al centro y un dock con 6 favoritos y «Todas». La hora y el estado los da la barra del sistema.
+- **Inicio** de una sola pantalla: la música a la izquierda, los instrumentos a la derecha y un dock con 6 favoritos y «Todas». La hora y el estado los da la barra del sistema.
+- **Velocímetro** de arco (0–180 km/h) con degradado verde → amarillo → rojo, **brújula** con el rumbo (N, NE, E… y grados) y
+  **odómetro** de viaje y total, todo con el GPS del estéreo (1 posición por segundo):
+  - **Límite de velocidad**: toca el velocímetro y escribe los km/h (por ejemplo 110). Aparece una marca roja en el arco y, si lo pasas
+    más de 2 s, una voz dice «Está excediendo el límite de velocidad» (se repite cada 30 s mientras sigas por encima; sin voz instalada, suena un pitido).
+    El número se pone rojo. «Desactivar» lo quita.
+  - **Odómetro**: tócalo para *Reiniciar viaje a 0*, *Ajustar viaje* o *Ajustar total* (al número del tablero del auto). Atajos: pulsación larga en Viaje para reiniciarlo, en Total para ajustarlo.
+  - Se descartan posiciones imprecisas, el «baile» del GPS con el auto parado y los saltos imposibles. Se mide solo con el auto encendido; una notificación
+    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. La variante de prueba pide el permiso de ubicación una vez.
 - **Música** con título, artista, portada redonda, fondo con sus colores, progreso, tiempos y anterior / play‑pausa / siguiente. Funciona con las fuentes de fábrica (música, radio,
   vídeo, Bluetooth) y con **apps de terceros**: para estas obtiene el paquete, el estado y la posición de la sesión multimedia de Android, de modo que
   al tocar la portada o el título se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
@@ -154,11 +169,19 @@ src/com/android/launcher3/
   media/SessionProbe.java   sesiones multimedia de Android para fuentes de terceros
   ui/MediaWidget.java       música del inicio (portada, tiempos, fondo)
   ui/Backdrop.java          fondo con los colores de la portada (Java puro)
+  ui/SpeedGaugeView.java    velocímetro de arco con degradado y marca del límite
+  ui/CompassView.java       brújula (rosa que gira con el rumbo)
+  car/Trip.java             velocidad, rumbo y odómetro a partir del GPS (Java puro, con pruebas)
+  car/SpeedLimit.java       cuándo avisar por exceso de velocidad (Java puro, con pruebas)
+  car/GpsTracker.java       LocationManager → Trip; guarda el odómetro
+  car/TripService.java      servicio en primer plano mientras el auto está encendido
+  car/SpeedAlert.java       aviso de voz (TextToSpeech) o pitido
   DiagnosticsActivity.java  informe de memoria, servicios y registro
 res/                        layouts, vectores y textos (es/en)
 tools/                      get-tools.sh, Sign.java, Verify.java
 docs/screenshots, bocetos  imágenes del diseño (render) y las 20 propuestas
 docs/preview/              generadores de esas imágenes (Python + Playwright)
+test/                      pruebas de Trip y SpeedLimit con recorridos simulados (./test/run.sh)
 ```
 
 ## Seguridad: léelo antes de instalar
@@ -183,7 +206,8 @@ Todo es bienvenido: capturas reales, informes de Diagnóstico de otros equipos, 
 
 A lightweight, fully native home-screen (launcher) for cheap Jancar/alps **AC8227L** Android car head units such as the **JCAC10003** (1 GB RAM, 1024×600).
 It replaces the factory launcher with a single-activity, ~80 KB, ~26 MB-PSS app that talks to the head unit's `com.jancar.services` (music, ACC, reverse camera, screen-off)
-through its own binder client. Third-party music apps are supported through Android media sessions.
+through its own binder client. Third-party music apps are supported through Android media sessions. Since 3.5 it also shows a GPS speedometer (green→yellow→red),
+a compass and trip/total odometers, with a spoken warning when you exceed a speed limit you set (tap the speedometer).
 
 **Download:** [`launcher-prueba.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/launcher-prueba.apk) (installs like a normal app, safe to try) ·
 [`launcher-reemplazo.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/launcher-reemplazo.apk) (replaces the factory launcher, needs `adb`).

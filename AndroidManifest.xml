@@ -7,8 +7,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.launcher3"
     android:sharedUserId="android.uid.system"
-    android:versionCode="2027"
-    android:versionName="3.4.0-nativo">
+    android:versionCode="2028"
+    android:versionName="3.5.0-nativo">
 
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="27" />
 
@@ -20,6 +20,9 @@
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <!-- Reutilizado del launcher original: el servicio comprueba la actividad superior -->
     <uses-permission android:name="android.permission.GET_TASKS" />
+    <!-- Velocidad, brújula y odómetro con el GPS del estéreo -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:name=".LauncherApp"
@@ -56,6 +59,11 @@
             android:label="@string/diag_title"
             android:excludeFromRecents="true"
             android:screenOrientation="nosensor"
+            android:exported="false" />
+
+        <!-- Mantiene el GPS activo con el auto encendido aunque otra app esté delante -->
+        <service
+            android:name=".car.TripService"
             android:exported="false" />
     </application>
 </manifest>

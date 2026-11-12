@@ -47,4 +47,30 @@
     <string name="all_apps_short">Todas</string>
     <string name="media_last">Última canción · toca ▶ para seguir</string>
     <string name="apps_count_hidden">%1$d · %2$d ocultas</string>
+    <!-- Instrumentos (GPS) -->
+    <string name="odo_trip">Viaje</string>
+    <string name="odo_total">Total</string>
+    <string name="odo_channel">Odómetro</string>
+    <string name="odo_notification">Midiendo velocidad y distancia con el GPS</string>
+    <string name="gps_no_permission">Toca para permitir la ubicación</string>
+    <string name="gps_disabled">GPS apagado · toca para activarlo</string>
+    <string name="gps_searching">Buscando satélites…</string>
+    <string name="odo_reset_title">¿Reiniciar el viaje?</string>
+    <string name="odo_reset_msg">El contador de viaje vuelve a 0 km. El total no cambia.</string>
+    <string name="odo_reset">Reiniciar</string>
+    <string name="odo_total_title">Ajustar el total</string>
+    <string name="odo_total_msg">Escribe los kilómetros que marca el tablero del auto.</string>
+    <string name="odo_save">Guardar</string>
+    <string name="cancel_btn">Cancelar</string>
+    <string name="km_format">%1$s km</string>
+    <string name="speed_warning_voice">Está excediendo el límite de velocidad</string>
+    <string name="limit_title">Límite de velocidad</string>
+    <string name="limit_msg">Si lo superas, una voz te avisa. Escribe los km/h (por ejemplo 110).</string>
+    <string name="limit_off">Desactivar</string>
+    <string name="odo_menu_title">Odómetro</string>
+    <string name="odo_menu_reset_trip">Reiniciar viaje a 0</string>
+    <string name="odo_menu_set_trip">Ajustar viaje…</string>
+    <string name="odo_menu_set_total">Ajustar total…</string>
+    <string name="odo_trip_title">Ajustar el viaje</string>
+    <string name="odo_trip_msg">Kilómetros del viaje (por ejemplo 12.5).</string>
 </resources>

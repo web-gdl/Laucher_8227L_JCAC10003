@@ -4,6 +4,9 @@ import android.app.Application;
 import android.content.ComponentCallbacks2;
 import android.os.SystemClock;
 
+import com.android.launcher3.car.GpsTracker;
+import com.android.launcher3.car.SpeedAlert;
+import com.android.launcher3.car.TripService;
 import com.android.launcher3.jancar.JancarBridge;
 import com.android.launcher3.media.MediaMemory;
 import com.android.launcher3.media.SessionProbe;
@@ -24,6 +27,8 @@ public final class LauncherApp extends Application {
     private JancarBridge bridge;
     private SessionProbe sessions;
     private MediaMemory memory;
+    private GpsTracker gps;
+    private SpeedAlert speedAlert;
     private final long startedAt = SystemClock.elapsedRealtime();
 
     public static LauncherApp get() { return instance; }
@@ -40,6 +45,12 @@ public final class LauncherApp extends Application {
         sessions = new SessionProbe(this);
         sessions.start();
         memory = new MediaMemory(this, bridge, sessions);
+        gps = new GpsTracker(this);
+        bridge.addListener(gps);
+        speedAlert = new SpeedAlert(this);
+        gps.addListener(speedAlert);
+        // Velocidad y odómetro: solo con el auto encendido (el ACC llega después por el puente)
+        TripService.start(this);
         apps.refresh();
         // Como el de fábrica: 6 s tras arrancar el estéreo, reabrir la última app de música.
         memory.scheduleBoot();
@@ -54,6 +65,10 @@ public final class LauncherApp extends Application {
     public SessionProbe sessions() { return sessions; }
 
     public MediaMemory memory() { return memory; }
+
+    public GpsTracker gps() { return gps; }
+
+    public SpeedAlert speedAlert() { return speedAlert; }
 
     public long uptimeMs() { return SystemClock.elapsedRealtime() - startedAt; }
 

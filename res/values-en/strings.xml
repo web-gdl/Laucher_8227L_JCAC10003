@@ -39,4 +39,30 @@
     <string name="all_apps_short">All</string>
     <string name="media_last">Last song · tap ▶ to resume</string>
     <string name="apps_count_hidden">%1$d · %2$d hidden</string>
+    <!-- Instruments (GPS) -->
+    <string name="odo_trip">Trip</string>
+    <string name="odo_total">Total</string>
+    <string name="odo_channel">Odometer</string>
+    <string name="odo_notification">Measuring speed and distance with GPS</string>
+    <string name="gps_no_permission">Tap to allow location</string>
+    <string name="gps_disabled">GPS off · tap to turn it on</string>
+    <string name="gps_searching">Searching for satellites…</string>
+    <string name="odo_reset_title">Reset trip?</string>
+    <string name="odo_reset_msg">The trip counter goes back to 0 km. The total does not change.</string>
+    <string name="odo_reset">Reset</string>
+    <string name="odo_total_title">Adjust total</string>
+    <string name="odo_total_msg">Enter the kilometres shown on the car\'s dashboard.</string>
+    <string name="odo_save">Save</string>
+    <string name="cancel_btn">Cancel</string>
+    <string name="km_format">%1$s km</string>
+    <string name="speed_warning_voice">You are exceeding the speed limit</string>
+    <string name="limit_title">Speed limit</string>
+    <string name="limit_msg">A voice warns you when you go over it. Enter km/h (for example 110).</string>
+    <string name="limit_off">Turn off</string>
+    <string name="odo_menu_title">Odometer</string>
+    <string name="odo_menu_reset_trip">Reset trip to 0</string>
+    <string name="odo_menu_set_trip">Adjust trip…</string>
+    <string name="odo_menu_set_total">Adjust total…</string>
+    <string name="odo_trip_title">Adjust trip</string>
+    <string name="odo_trip_msg">Trip kilometres (for example 12.5).</string>
 </resources>
