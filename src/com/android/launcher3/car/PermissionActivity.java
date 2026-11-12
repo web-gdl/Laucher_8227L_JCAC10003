@@ -62,7 +62,7 @@ public final class PermissionActivity extends Activity {
     private void done(boolean granted) {
         LauncherApp app = LauncherApp.get();
         app.gps().recheck();
-        if (granted && app.bridge().isAccOn()) TripService.start(this);
+        app.gps().sync();
         finish();
     }
 }

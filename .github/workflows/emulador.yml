@@ -49,6 +49,9 @@ jobs:
           rm -rf /tmp/r && mkdir /tmp/r && cp -r emu-out /tmp/r/
           git checkout --orphan resultados-tmp && git rm -rfq . && cp -r /tmp/r/emu-out . && git add emu-out
           git commit -qm "resultados ${GITHUB_SHA}" && git push -f origin HEAD:emulador-resultados
+      - name: Resultado
+        if: always()
+        run: cat emu-out/resultado.txt; test "$(cat emu-out/fail.txt)" = 0
       - uses: actions/upload-artifact@v4
         if: always()
         with:

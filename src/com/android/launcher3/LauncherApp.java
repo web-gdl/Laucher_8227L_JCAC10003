@@ -6,7 +6,7 @@ import android.os.SystemClock;
 
 import com.android.launcher3.car.GpsTracker;
 import com.android.launcher3.car.SpeedAlert;
-import com.android.launcher3.car.TripService;
+import com.android.launcher3.car.Guard;
 import com.android.launcher3.jancar.JancarBridge;
 import com.android.launcher3.media.MediaMemory;
 import com.android.launcher3.media.SessionProbe;
@@ -45,12 +45,12 @@ public final class LauncherApp extends Application {
         sessions = new SessionProbe(this);
         sessions.start();
         memory = new MediaMemory(this, bridge, sessions);
+        Guard.init(this);
         gps = new GpsTracker(this);
         bridge.addListener(gps);
         speedAlert = new SpeedAlert(this);
         gps.addListener(speedAlert);
-        // Velocidad y odómetro: solo con el auto encendido (el ACC llega después por el puente)
-        try { TripService.start(this); } catch (RuntimeException e) { Diag.warn("gps", "TripService", e); }
+        // El GPS no arranca aquí: lo decide GpsTracker.sync() cuando el inicio se muestra (ver car/Guard).
         apps.refresh();
         // Como el de fábrica: 6 s tras arrancar el estéreo, reabrir la última app de música.
         memory.scheduleBoot();

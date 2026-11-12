@@ -30,7 +30,7 @@ import java.util.Locale;
  */
 public final class GpsTracker implements JancarBridge.Listener {
 
-    public enum State { NO_PERMISSION, DISABLED, SEARCHING, OK }
+    public enum State { OFF, NO_PERMISSION, DISABLED, SEARCHING, OK }
 
     public interface Listener { void onGpsChanged(GpsTracker gps); }
 
@@ -49,6 +49,8 @@ public final class GpsTracker implements JancarBridge.Listener {
     private double unsavedM;
     private float lastAccuracy = -1f;
     private int satellites = -1;
+    private boolean homeVisible;
+    private boolean accOn = true;
 
     public GpsTracker(Context context) {
         app = context.getApplicationContext();
@@ -65,10 +67,12 @@ public final class GpsTracker implements JancarBridge.Listener {
 
     public void start() {
         if (running) return;
+        if (!Guard.gpsEnabled()) { setState(State.OFF); return; }
         if (!hasPermission()) { setState(State.NO_PERMISSION); return; }
         if (lm == null) lm = (LocationManager) app.getSystemService(Context.LOCATION_SERVICE);
         if (lm == null) { setState(State.DISABLED); return; }
         try {
+            Guard.begin(Guard.GPS);
             lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000L, 0f, locationListener, Looper.getMainLooper());
             running = true;
             trip.breakSegment();
@@ -82,6 +86,7 @@ public final class GpsTracker implements JancarBridge.Listener {
     }
 
     public void stop() {
+        if (!running) { recheck(); return; }
         main.removeCallbacks(staleCheck);
         if (running && lm != null) {
             try { lm.removeUpdates(locationListener); } catch (RuntimeException ignored) {}
@@ -103,7 +108,40 @@ public final class GpsTracker implements JancarBridge.Listener {
     }
 
     private void updateIdleState() {
-        state = hasPermission() ? State.SEARCHING : State.NO_PERMISSION;
+        state = !Guard.gpsEnabled() ? State.OFF : hasPermission() ? State.SEARCHING : State.NO_PERMISSION;
+    }
+
+    /** El inicio está (o deja de estar) a la vista. */
+    public void setHomeVisible(boolean visible) {
+        homeVisible = visible;
+        sync();
+    }
+
+    private final Runnable syncLater = this::sync;
+
+    /**
+     * Pone en marcha o detiene la medición según lo que toca ahora:
+     *  - sin activar, sin permiso o con el auto apagado: nada;
+     *  - con «segundo plano» y el GPS ya comprobado: servicio en primer plano (mide con otras apps delante);
+     *  - si no: GPS directo, solo mientras el inicio está visible.
+     */
+    public void sync() {
+        main.removeCallbacks(syncLater);
+        if (!Guard.gpsEnabled() || !hasPermission() || !accOn) {
+            TripService.stop(app);
+            if (!TripService.isActive()) stop();
+            return;
+        }
+        if (Guard.bgEnabled() && Guard.ok(Guard.GPS)) { TripService.start(app); return; }
+        TripService.stop(app);
+        if (TripService.isActive()) return; // al terminar de pararse, el servicio vuelve a llamar a sync()
+        if (homeVisible) {
+            start();
+            // primera vez: cuando el GPS quede comprobado, pasar al servicio en segundo plano
+            if (Guard.bgEnabled() && !Guard.ok(Guard.GPS)) main.postDelayed(syncLater, Guard.WINDOW_MS + 2000);
+        } else {
+            stop();
+        }
     }
 
     public void addListener(Listener l) { if (!listeners.contains(l)) listeners.add(l); }
@@ -216,8 +254,9 @@ public final class GpsTracker implements JancarBridge.Listener {
     // ------------------------------------------------------------------ ACC: medir solo con el auto encendido
 
     @Override public void onAccChanged(boolean on) {
-        if (on) TripService.start(app);
-        else { save(); TripService.stop(app); }
+        accOn = on;
+        if (!on) save();
+        sync();
     }
 
     @Override public void onMediaChanged(MediaState s) {}

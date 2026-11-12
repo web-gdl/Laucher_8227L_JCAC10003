@@ -204,6 +204,7 @@
                             android:layout_height="@dimen/speed_gauge" />
 
                         <LinearLayout
+                            android:id="@+id/compass_box"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"

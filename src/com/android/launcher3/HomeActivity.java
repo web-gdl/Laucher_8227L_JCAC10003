@@ -24,9 +24,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.launcher3.car.GpsTracker;
+import com.android.launcher3.car.Guard;
 import com.android.launcher3.car.PermissionActivity;
 import com.android.launcher3.car.Trip;
-import com.android.launcher3.car.TripService;
 import com.android.launcher3.jancar.JancarBridge;
 import com.android.launcher3.jancar.MediaState;
 import com.android.launcher3.media.MediaMemory;
@@ -59,6 +59,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private CompassView compass;
     private TextView headingText, gpsStatus, odoTrip, odoTotal;
     private String lastTrip, lastTotal, lastHeading;
+    private boolean gaugesPaused;
+    private final Runnable gpsVisible = () -> { gps.setHomeVisible(true); safeGps(); };
 
     private View homeRoot;
     private View appsPanel;
@@ -127,6 +129,14 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         gpsStatus = findViewById(R.id.gps_status);
         odoTrip = findViewById(R.id.odo_trip);
         odoTotal = findViewById(R.id.odo_total);
+        gaugesPaused = Guard.tripped(Guard.UI);
+        if (gaugesPaused) {
+            // El arranque anterior no terminó mientras se dibujaban: no se dibujan hasta que el usuario lo pida
+            speedGauge.setVisibility(View.GONE);
+            findViewById(R.id.compass_box).setVisibility(View.GONE);
+        } else {
+            Guard.begin(Guard.UI);
+        }
         findViewById(R.id.gauges_card).setOnClickListener(v -> onGaugesTapped());
         // Velocímetro: límite de velocidad. Odómetro: reiniciar o ajustar (pulsación larga: atajos directos).
         speedGauge.setOnClickListener(v -> { if (!fixGps()) editSpeedLimit(); });
@@ -168,6 +178,10 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         onAppsChanged(apps.getApps());
         renderMedia();
         safeGps();
+        // La primera vez, esperar a que el dibujo de los instrumentos quede comprobado antes de tocar el GPS
+        ticker.removeCallbacks(gpsVisible);
+        if (Guard.pending(Guard.UI)) ticker.postDelayed(gpsVisible, Guard.UI_WINDOW_MS + 1000);
+        else gps.setHomeVisible(true);
     }
 
     @Override protected void onResume() {
@@ -192,6 +206,8 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         bridge.removeListener(this);
         sessions.removeListener(this);
         gps.removeListener(this);
+        ticker.removeCallbacks(gpsVisible);
+        try { gps.setHomeVisible(false); } catch (RuntimeException e) { Diag.warn("gps", "onStop", e); }
         // Fuera de la pantalla de inicio: deja en caché solo la mitad de los iconos (los del dock vuelven al instante).
         apps.trimIcons(false);
         super.onStop();
@@ -226,14 +242,10 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     // ------------------------------------------------------------------ instrumentos (GPS)
 
-    /**
-     * Instrumentos al mostrar el inicio. Nunca pide permisos aquí (eso bloqueaba la HOME en el 8227L): sin permiso, la tarjeta
-     * dice «Toca para permitir la ubicación». Un fallo de los instrumentos no debe impedir que el inicio se abra.
-     */
+    /** Refresca la tarjeta. Un fallo de los instrumentos no debe impedir que el inicio se abra. */
     private void safeGps() {
         try {
             gps.recheck();
-            if (gps.hasPermission() && !gps.isRunning() && bridge.isAccOn()) TripService.start(this);
             onGpsChanged(gps);
         } catch (RuntimeException e) {
             Diag.warn("gps", "instrumentos", e);
@@ -244,7 +256,19 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     /** Si falta el permiso o el GPS está apagado, lleva a resolverlo y devuelve true. */
     private boolean fixGps() {
+        if (gaugesPaused) {
+            Guard.retry(Guard.UI);
+            recreate();
+            return true;
+        }
         switch (gps.state()) {
+            case OFF:
+                // Activación a petición del usuario; a partir de aquí se enciende solo con el auto
+                Guard.setGpsEnabled(true);
+                gps.recheck();
+                if (!gps.hasPermission()) PermissionActivity.open(this);
+                else gps.sync();
+                break;
             case NO_PERMISSION:
                 PermissionActivity.open(this);
                 break;
@@ -273,7 +297,9 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         if (!trip.equals(lastTrip)) { lastTrip = trip; odoTrip.setText(trip); }
         String total = getString(R.string.km_format, formatThousands(Math.round(Math.floor(g.totalKm()))));
         if (!total.equals(lastTotal)) { lastTotal = total; odoTotal.setText(total); }
-        int msg = st == GpsTracker.State.NO_PERMISSION ? R.string.gps_no_permission
+        int msg = gaugesPaused ? R.string.gauges_paused
+                : st == GpsTracker.State.OFF ? (Guard.tripped(Guard.GPS) ? R.string.gps_tripped : R.string.gps_off)
+                : st == GpsTracker.State.NO_PERMISSION ? R.string.gps_no_permission
                 : st == GpsTracker.State.DISABLED ? R.string.gps_disabled
                 : st == GpsTracker.State.SEARCHING && g.isRunning() ? R.string.gps_searching : 0;
         if (msg == 0) {
@@ -305,13 +331,18 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     }
 
     private void showOdometerMenu() {
-        CharSequence[] items = {getString(R.string.odo_menu_reset_trip), getString(R.string.odo_menu_set_trip), getString(R.string.odo_menu_set_total)};
+        CharSequence[] items = {getString(R.string.odo_menu_reset_trip), getString(R.string.odo_menu_set_trip), getString(R.string.odo_menu_set_total),
+                getString(Guard.bgEnabled() ? R.string.odo_menu_bg_on : R.string.odo_menu_bg_off),
+                getString(Guard.gpsEnabled() ? R.string.odo_menu_gps_off : R.string.odo_menu_gps_on)};
         new AlertDialog.Builder(this)
                 .setTitle(R.string.odo_menu_title)
                 .setItems(items, (d, which) -> {
                     if (which == 0) confirmResetTrip();
                     else if (which == 1) editTrip();
-                    else editTotal();
+                    else if (which == 2) editTotal();
+                    else if (which == 3) { Guard.setBgEnabled(!Guard.bgEnabled()); gps.sync(); }
+                    else if (Guard.gpsEnabled()) { Guard.setGpsEnabled(false); gps.sync(); gps.recheck(); onGpsChanged(gps); }
+                    else fixGps();
                 })
                 .setNegativeButton(R.string.cancel_btn, null)
                 .show();

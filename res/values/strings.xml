@@ -73,4 +73,11 @@
     <string name="odo_menu_set_total">Ajustar total…</string>
     <string name="odo_trip_title">Ajustar el viaje</string>
     <string name="odo_trip_msg">Kilómetros del viaje (por ejemplo 12.5).</string>
+    <string name="gps_off">Toca para activar velocímetro y odómetro</string>
+    <string name="gps_tripped">El GPS se desactivó tras un fallo · toca para reintentar</string>
+    <string name="gauges_paused">Instrumentos en pausa tras un fallo · toca para reintentar</string>
+    <string name="odo_menu_bg_on">Medir con otras apps delante: SÍ (tocar para quitar)</string>
+    <string name="odo_menu_bg_off">Medir con otras apps delante: NO (tocar para activar)</string>
+    <string name="odo_menu_gps_off">Apagar velocímetro y odómetro</string>
+    <string name="odo_menu_gps_on">Activar velocímetro y odómetro</string>
 </resources>

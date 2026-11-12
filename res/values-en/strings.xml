@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Home</string>
-    <string name="app_name_test">Home (test)</string>
+    <string name="app_name_test">Laucher 8227L</string>
     <string name="all_apps">Apps</string>
     <string name="screen_off">Screen off</string>
     <string name="settings">Settings</string>
@@ -65,4 +65,11 @@
     <string name="odo_menu_set_total">Adjust total…</string>
     <string name="odo_trip_title">Adjust trip</string>
     <string name="odo_trip_msg">Trip kilometres (for example 12.5).</string>
+    <string name="gps_off">Tap to turn on speedometer and odometer</string>
+    <string name="gps_tripped">GPS was turned off after a failure · tap to retry</string>
+    <string name="gauges_paused">Instruments paused after a failure · tap to retry</string>
+    <string name="odo_menu_bg_on">Measure while other apps are open: YES (tap to turn off)</string>
+    <string name="odo_menu_bg_off">Measure while other apps are open: NO (tap to turn on)</string>
+    <string name="odo_menu_gps_off">Turn off speedometer and odometer</string>
+    <string name="odo_menu_gps_on">Turn on speedometer and odometer</string>
 </resources>
