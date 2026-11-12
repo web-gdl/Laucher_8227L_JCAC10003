@@ -60,4 +60,6 @@ adb shell cat /sdcard/Android/data/$PKG/files/crash.txt >> $O/crash.txt 2>&1 || 
 adb shell ls /data/anr >> $O/anr.txt 2>&1 || true
 adb logcat -d -v time > $O/logcat.txt
 grep -nE "FATAL|AndroidRuntime|ANR in|Exception|launcher8227|art  :" $O/logcat.txt | head -300 > $O/logcat-resumen.txt
+set +x
+for f in $O/*actividades.txt $O/3-start.txt $O/4-start.txt $O/pid.txt $O/crash.txt $O/anr.txt $O/logcat-resumen.txt; do echo "===== $f"; cat "$f"; done
 exit 0

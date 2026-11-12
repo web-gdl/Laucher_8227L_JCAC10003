@@ -10,6 +10,9 @@ on:
   push:
     branches: [ 'emulador/**' ]
 
+permissions:
+  contents: write
+
 jobs:
   emulador:
     runs-on: ubuntu-latest
@@ -38,6 +41,14 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           script: ./test/emulator.sh
+      - name: Guardar resultados en la rama emulador-resultados
+        if: always()
+        run: |
+          git config user.name "ci"; git config user.email "ci@users.noreply.github.com"
+          git fetch origin emulador-resultados || true
+          rm -rf /tmp/r && mkdir /tmp/r && cp -r emu-out /tmp/r/
+          git checkout --orphan resultados-tmp && git rm -rfq . && cp -r /tmp/r/emu-out . && git add emu-out
+          git commit -qm "resultados ${GITHUB_SHA}" && git push -f origin HEAD:emulador-resultados
       - uses: actions/upload-artifact@v4
         if: always()
         with:
