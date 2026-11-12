@@ -50,7 +50,7 @@ public final class LauncherApp extends Application {
         speedAlert = new SpeedAlert(this);
         gps.addListener(speedAlert);
         // Velocidad y odómetro: solo con el auto encendido (el ACC llega después por el puente)
-        TripService.start(this);
+        try { TripService.start(this); } catch (RuntimeException e) { Diag.warn("gps", "TripService", e); }
         apps.refresh();
         // Como el de fábrica: 6 s tras arrancar el estéreo, reabrir la última app de música.
         memory.scheduleBoot();
@@ -89,15 +89,20 @@ public final class LauncherApp extends Application {
     private void installCrashLogger() {
         final Thread.UncaughtExceptionHandler prev = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler((t, e) -> {
-            try {
-                File f = new File(getFilesDir(), "crash.txt");
-                PrintWriter pw = new PrintWriter(new FileWriter(f, false));
-                pw.println("version " + BuildInfo.version(LauncherApp.this) + " uptime " + uptimeMs() + " ms, hilo " + t.getName());
-                e.printStackTrace(pw);
-                pw.println();
-                pw.print(Diag.dump());
-                pw.close();
-            } catch (Throwable ignored) {}
+            // Copia en files/ y otra en Android/data/<paquete>/files/ (visible con un explorador de archivos o por USB)
+            File[] dirs = {getFilesDir(), null};
+            try { dirs[1] = getExternalFilesDir(null); } catch (Throwable ignored) {}
+            for (File dir : dirs) {
+                if (dir == null) continue;
+                try {
+                    PrintWriter pw = new PrintWriter(new FileWriter(new File(dir, "crash.txt"), false));
+                    pw.println("version " + BuildInfo.version(LauncherApp.this) + " uptime " + uptimeMs() + " ms, hilo " + t.getName());
+                    e.printStackTrace(pw);
+                    pw.println();
+                    pw.print(Diag.dump());
+                    pw.close();
+                } catch (Throwable ignored) {}
+            }
             if (prev != null) prev.uncaughtException(t, e);
         });
     }

@@ -7,8 +7,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.android.launcher3"
     android:sharedUserId="android.uid.system"
-    android:versionCode="2029"
-    android:versionName="3.5.1-nativo">
+    android:versionCode="2030"
+    android:versionName="3.5.2-nativo">
 
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="27" />
 
@@ -57,6 +57,15 @@
         <activity
             android:name=".DiagnosticsActivity"
             android:label="@string/diag_title"
+            android:excludeFromRecents="true"
+            android:screenOrientation="nosensor"
+            android:exported="false" />
+
+        <!-- Pide el permiso de ubicación en su propia tarea (no desde la HOME) -->
+        <activity
+            android:name=".car.PermissionActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:taskAffinity=""
             android:excludeFromRecents="true"
             android:screenOrientation="nosensor"
             android:exported="false" />

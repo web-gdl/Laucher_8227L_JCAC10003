@@ -2,6 +2,16 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.5.2: el inicio no abría al instalarlo
+
+- **Corregido:** en el alps 8227L, tras instalar la 3.5.0/3.5.1 y elegir «Laucher 8227L» en *Abrir con… una vez / siempre*,
+  el inicio no se abría. La 3.5 pedía el permiso de ubicación desde la propia pantalla de inicio al abrirse; ahora **nunca se
+  pide al abrir**: la tarjeta muestra «Toca para permitir la ubicación» y el permiso se pide en una ventana aparte
+  (`PermissionActivity`, en su propia tarea, fuera de la HOME). Al volver se actualiza solo y arranca el odómetro.
+- Los instrumentos no pueden impedir que el inicio abra: cualquier fallo del GPS queda en Diagnóstico y el inicio sigue.
+- Si el launcher se cierra, `crash.txt` se guarda también en `Android/data/com.webgdl.launcher8227/files/` (accesible con un
+  explorador de archivos o por USB) para poder enviarlo.
+
 ## 3.5.1: versión definitiva «Laucher 8227L»
 
 Publicada como versión estable (deja de ser «de prueba»).

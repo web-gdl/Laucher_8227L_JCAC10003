@@ -94,6 +94,14 @@ public final class GpsTracker implements JancarBridge.Listener {
         notifyChanged();
     }
 
+    /** Tras conceder (o quitar) el permiso fuera del inicio: actualiza el estado mostrado. */
+    public void recheck() {
+        if (running) return;
+        State before = state;
+        updateIdleState();
+        if (state != before) notifyChanged();
+    }
+
     private void updateIdleState() {
         state = hasPermission() ? State.SEARCHING : State.NO_PERMISSION;
     }

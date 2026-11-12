@@ -5,7 +5,6 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.net.Uri;
 import android.os.Bundle;
@@ -25,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.launcher3.car.GpsTracker;
+import com.android.launcher3.car.PermissionActivity;
 import com.android.launcher3.car.Trip;
 import com.android.launcher3.car.TripService;
 import com.android.launcher3.jancar.JancarBridge;
@@ -48,8 +48,6 @@ import java.util.Set;
  */
 public final class HomeActivity extends Activity implements AppsRepository.Listener, JancarBridge.Listener, SessionProbe.Listener, GpsTracker.Listener {
 
-    private static final int REQ_LOCATION = 1;
-
     private Prefs prefs;
     private AppsRepository apps;
     private JancarBridge bridge;
@@ -61,7 +59,6 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private CompassView compass;
     private TextView headingText, gpsStatus, odoTrip, odoTotal;
     private String lastTrip, lastTotal, lastHeading;
-    private boolean askedLocation;
 
     private View homeRoot;
     private View appsPanel;
@@ -170,8 +167,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         gps.addListener(this);
         onAppsChanged(apps.getApps());
         renderMedia();
-        ensureGps();
-        onGpsChanged(gps);
+        safeGps();
     }
 
     @Override protected void onResume() {
@@ -181,6 +177,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         bridge.requestMediaState();
         writeSystemUiGlobals();
         renderMedia();
+        safeGps(); // al volver de Ajustes o del diálogo de permiso
     }
 
     @Override protected void onPause() {
@@ -229,22 +226,18 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     // ------------------------------------------------------------------ instrumentos (GPS)
 
-    /** Con permiso y el auto encendido, que el servicio esté midiendo; sin permiso, pedirlo una vez por arranque. */
-    private void ensureGps() {
-        if (gps.hasPermission()) {
-            if (!gps.isRunning() && bridge.isAccOn()) TripService.start(this);
-        } else if (!askedLocation) {
-            askedLocation = true;
-            requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION);
+    /**
+     * Instrumentos al mostrar el inicio. Nunca pide permisos aquí (eso bloqueaba la HOME en el 8227L): sin permiso, la tarjeta
+     * dice «Toca para permitir la ubicación». Un fallo de los instrumentos no debe impedir que el inicio se abra.
+     */
+    private void safeGps() {
+        try {
+            gps.recheck();
+            if (gps.hasPermission() && !gps.isRunning() && bridge.isAccOn()) TripService.start(this);
+            onGpsChanged(gps);
+        } catch (RuntimeException e) {
+            Diag.warn("gps", "instrumentos", e);
         }
-    }
-
-    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] results) {
-        if (requestCode != REQ_LOCATION) return;
-        boolean ok = results.length > 0 && results[0] == PackageManager.PERMISSION_GRANTED;
-        Diag.log("gps", "permiso de ubicación " + (ok ? "concedido" : "denegado"));
-        if (ok) TripService.start(this);
-        onGpsChanged(gps);
     }
 
     private void onGaugesTapped() { fixGps(); }
@@ -253,13 +246,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private boolean fixGps() {
         switch (gps.state()) {
             case NO_PERMISSION:
-                if (shouldShowRequestPermissionRationale(android.Manifest.permission.ACCESS_FINE_LOCATION) || !askedLocation) {
-                    askedLocation = true;
-                    requestPermissions(new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, REQ_LOCATION);
-                } else {
-                    // «No volver a preguntar»: solo queda la pantalla de la app en Ajustes
-                    tryStart(new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName())));
-                }
+                PermissionActivity.open(this);
                 break;
             case DISABLED:
                 tryStart(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
