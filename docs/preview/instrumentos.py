@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inicio 3.5 (diseño A): música a la izquierda; velocidad, brújula y odómetro a la derecha.
+"""Inicio 3.6 (diseño A, 50/50): música en la mitad izquierda; velocidad, brújula y odómetro en la derecha.
 
 Genera docs/screenshots/01, 02 y 05 (render del diseño, no capturas del equipo).
     pip install playwright pillow && python3 docs/preview/instrumentos.py
@@ -28,7 +28,7 @@ def mix(t):
     return "#%02X%02X%02X" % tuple(round(a[i] + (b[i] - a[i]) * u) for i in range(3))
 
 
-def speed_gauge(speed, limit, size=180, maxv=180, stroke=14):
+def speed_gauge(speed, limit, size=210, maxv=180, stroke=14):
     c, r = size / 2, size / 2 - stroke / 2 - 1
     a0, sweep = -135, 270
     track = ""
@@ -63,7 +63,7 @@ def speed_gauge(speed, limit, size=180, maxv=180, stroke=14):
             f'<div style="margin-top:6px;font-size:{int(size*.085)}px;color:{DIM};letter-spacing:1px">km/h</div></div></div>')
 
 
-def compass(heading, size=110):
+def compass(heading, size=130):
     c, rr = size / 2, size / 2 - 2
     rot = heading if heading is not None else 0
     ticks = ""
@@ -101,13 +101,13 @@ def home(speed, heading, limit, trip, total, status=None, playing=True):
         cov = f'<div style="width:150px;height:150px;border-radius:75px;background:#1F242D;display:flex;align-items:center;justify-content:center">{ico("note", 60, DIM)}</div>'
         bar = '<div style="margin-top:12px;height:4px"></div><div style="margin-top:4px;height:17px"></div>'
         main_ico = "play"
-    music = (f'<div style="flex:1;display:flex;align-items:center;padding:8px">{cov}<div style="width:320px;margin-left:24px">'
+    music = (f'<div style="flex:1;display:flex;align-items:center;padding:8px">{cov}<div style="flex:1;min-width:0;margin-left:22px">'
              f'<div style="font-size:13px;letter-spacing:3px;color:{ACC}">{src}</div>'
              f'<div style="margin-top:4px;font-size:32px;font-weight:600;color:{INK};line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{title}</div>'
              f'<div style="font-size:19px;color:{DIM}">{artist}</div>{bar}'
              f'<div style="margin-top:10px;display:flex;align-items:center;gap:22px">{btn("prev", 60)}{btn(main_ico, 76, True)}{btn("next", 60)}</div></div></div>')
     st = f'<div style="margin-top:6px;text-align:center;font-size:14px;color:{ACC}">{status}</div>' if status else ""
-    card = (f'<div style="{GLASS};width:340px;padding:16px 20px 14px;box-sizing:border-box;margin-left:26px">'
+    card = (f'<div style="{GLASS};flex:1;padding:16px 20px 14px;box-sizing:border-box;margin-left:26px">'
             f'<div style="display:flex;align-items:center">{speed_gauge(speed, limit)}{compass(heading)}</div>{st}'
             f'<div style="height:1px;margin-top:10px;background:rgba(255,255,255,.08)"></div>'
             f'<div style="display:flex;margin-top:10px">{odo("VIAJE", trip + " km")}{odo("TOTAL", total + " km", 1.3)}</div></div>')
