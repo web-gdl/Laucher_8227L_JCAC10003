@@ -23,7 +23,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.launcher3.car.FuelLog;
 import com.android.launcher3.car.GpsTracker;
+import com.android.launcher3.car.SpeedAlert;
 import com.android.launcher3.car.Guard;
 import com.android.launcher3.car.PermissionActivity;
 import com.android.launcher3.car.Trip;
@@ -33,7 +35,9 @@ import com.android.launcher3.media.MediaMemory;
 import com.android.launcher3.media.SessionProbe;
 import com.android.launcher3.ui.CompassView;
 import com.android.launcher3.ui.MediaWidget;
+import com.android.launcher3.ui.PageDots;
 import com.android.launcher3.ui.SpeedGaugeView;
+import com.android.launcher3.ui.WidgetPager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -57,9 +61,15 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     private SpeedGaugeView speedGauge;
     private CompassView compass;
-    private TextView headingText, gpsStatus, odoTrip, odoTotal, statTime, statAvg, statMax, statAlt, serviceText;
+    private TextView headingText, gpsStatus, odoTrip, odoTotal, statTime, statAvg, statMax, statAlt, statDist, serviceText,
+            serviceBig, serviceLabel, fuelAvg, fuelLast, fuelCost, fuelRange, widgetTitle;
     private android.widget.ProgressBar serviceBar;
-    private String lastTrip, lastTotal, lastHeading, lastTime, lastAvg, lastMax, lastAlt, lastService;
+    private WidgetPager pager;
+    private PageDots pageDots;
+    private android.content.SharedPreferences widgetPrefs;
+    private String lastTrip, lastTotal, lastHeading, lastTime, lastAvg, lastMax, lastAlt, lastDist, lastService, lastFuel;
+    private static final int[] PAGE_TITLES = {R.string.page_speed, R.string.page_odo, R.string.page_fuel, R.string.page_service,
+            R.string.page_trip, R.string.page_compass};
     private boolean gaugesPaused;
     private final Runnable gpsVisible = () -> { gps.setHomeVisible(true); safeGps(); };
 
@@ -134,14 +144,24 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         statAvg = findViewById(R.id.stat_avg);
         statMax = findViewById(R.id.stat_max);
         statAlt = findViewById(R.id.stat_alt);
+        statDist = findViewById(R.id.stat_dist);
         serviceText = findViewById(R.id.service_text);
         serviceBar = findViewById(R.id.service_bar);
-        findViewById(R.id.service_box).setOnClickListener(v -> showServiceMenu());
+        serviceBig = findViewById(R.id.service_big);
+        serviceLabel = findViewById(R.id.service_label);
+        fuelAvg = findViewById(R.id.fuel_avg);
+        fuelLast = findViewById(R.id.fuel_last);
+        fuelCost = findViewById(R.id.fuel_cost);
+        fuelRange = findViewById(R.id.fuel_range);
+        widgetTitle = findViewById(R.id.widget_title);
+        pager = findViewById(R.id.pager);
+        pageDots = findViewById(R.id.page_dots);
+        widgetPrefs = getSharedPreferences("widget", MODE_PRIVATE);
         gaugesPaused = Guard.tripped(Guard.UI);
         if (gaugesPaused) {
             // El arranque anterior no terminó mientras se dibujaban: no se dibujan hasta que el usuario lo pida
             speedGauge.setVisibility(View.GONE);
-            findViewById(R.id.compass_box).setVisibility(View.GONE);
+            compass.setVisibility(View.GONE);
         } else {
             Guard.begin(Guard.UI);
         }
@@ -150,12 +170,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         speedGauge.setOnClickListener(v -> fixGps());
         // Límite: se arrastra sobre el arco; se guarda al soltar
         speedGauge.setOnLimitChange((kmh, finished) -> { if (finished) LauncherApp.get().speedAlert().setLimitKmh(kmh); });
-        // Pulsación larga: probar el aviso de voz (atenuar música, volumen alto) sin tener que pasarse del límite
-        speedGauge.setOnLongClickListener(v -> { LauncherApp.get().speedAlert().warn(); return true; });
-        findViewById(R.id.odo_trip_box).setOnClickListener(v -> showOdometerMenu());
-        findViewById(R.id.odo_total_box).setOnClickListener(v -> showOdometerMenu());
-        findViewById(R.id.odo_trip_box).setOnLongClickListener(v -> { confirmResetTrip(); return true; });
-        findViewById(R.id.odo_total_box).setOnLongClickListener(v -> { editTotal(); return true; });
+        setupPager();
 
         mediaCard.setOnClickListener(v -> openMediaApp());
         mediaCard.setOnLongClickListener(v -> { chooseMediaApp(); return true; });
@@ -189,6 +204,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         gps.addListener(this);
         onAppsChanged(apps.getApps());
         renderMedia();
+        updateStats(gps);
         safeGps();
         // La primera vez, esperar a que el dibujo de los instrumentos quede comprobado antes de tocar el GPS
         ticker.removeCallbacks(gpsVisible);
@@ -308,10 +324,10 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         compass.setHeading(b);
         String heading = b < 0 ? "—" : Trip.cardinal(b) + " " + Math.round(b) + "°";
         if (!heading.equals(lastHeading)) { lastHeading = heading; headingText.setText(heading); }
-        String trip = getString(R.string.km_format, String.format(Locale.US, "%.1f", g.tripKm()));
-        if (!trip.equals(lastTrip)) { lastTrip = trip; odoTrip.setText(trip); }
-        String total = getString(R.string.km_format, formatThousands(Math.round(Math.floor(g.totalKm()))));
-        if (!total.equals(lastTotal)) { lastTotal = total; odoTotal.setText(total); }
+        String trip = String.format(Locale.US, "%.1f", g.tripKm());
+        if (!trip.equals(lastTrip)) { lastTrip = trip; odoTrip.setText(withUnit(trip, "km")); }
+        String total = formatThousands(Math.round(Math.floor(g.totalKm())));
+        if (!total.equals(lastTotal)) { lastTotal = total; odoTotal.setText(withUnit(total, "km")); }
         updateStats(g);
         int msg = gaugesPaused ? R.string.gauges_paused
                 : st == GpsTracker.State.OFF ? (Guard.tripped(Guard.GPS) ? R.string.gps_tripped : R.string.gps_off)
@@ -339,20 +355,41 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         double alt = g.altitudeM();
         String al = Double.isNaN(alt) ? "--" : formatThousands(Math.round(alt));
         if (!al.equals(lastAlt)) { lastAlt = al; statAlt.setText(withUnit(al, "m")); }
+        String dist = String.format(Locale.US, "%.1f", g.tripKm());
+        if (!dist.equals(lastDist)) { lastDist = dist; statDist.setText(withUnit(dist, "km")); }
+
         double rem = g.serviceRemainingKm();
-        String sv = Double.isNaN(rem) ? "-" : String.valueOf(Math.round(rem));
+        int interval = Math.max(1, g.serviceIntervalKm());
+        String sv = Double.isNaN(rem) ? "-" : Math.round(rem) + "/" + interval + "/" + Math.round(g.serviceLastKm());
         if (!sv.equals(lastService)) {
             lastService = sv;
             if (Double.isNaN(rem)) {
+                serviceLabel.setText(R.string.page_service);
+                serviceBig.setText("--");
                 serviceText.setText(R.string.service_none);
                 serviceBar.setProgress(0);
             } else {
-                long km = Math.round(Math.abs(rem));
-                serviceText.setText(getString(rem < 0 ? R.string.service_late : R.string.service_in, formatThousands(km)));
-                int interval = Math.max(1, g.serviceIntervalKm());
+                serviceLabel.setText(rem < 0 ? R.string.service_late_label : R.string.service_in_label);
+                serviceBig.setText(withUnit(formatThousands(Math.round(Math.abs(rem))), "km"));
+                double last = g.serviceLastKm();
+                serviceText.setText(last >= 0 ? getString(R.string.service_every_last, formatThousands(interval), formatThousands(Math.round(last)))
+                        : getString(R.string.service_every, formatThousands(interval)));
                 serviceBar.setProgress((int) Math.max(0, Math.min(1000, 1000 - rem / interval * 1000)));
             }
         }
+        renderFuel(g, false);
+    }
+
+    private void renderFuel(GpsTracker g, boolean force) {
+        FuelLog f = g.fuel();
+        double avg = f.avgKmPerL(), last = f.lastLiters(), cost = f.lastCostPerKm(), range = f.rangeKm(g.tankLiters());
+        String key = f.serialize() + "|" + g.tankLiters();
+        if (!force && key.equals(lastFuel)) return;
+        lastFuel = key;
+        fuelAvg.setText(avg < 0 ? withUnit("--", "km/L") : withUnit(String.format(Locale.US, "%.1f", avg), "km/L"));
+        fuelLast.setText(last < 0 ? "--" : withUnit(String.format(Locale.US, "%.1f", last), "L"));
+        fuelCost.setText(cost < 0 ? "--" : withUnit(String.format(Locale.US, "%.2f", cost), "$/km"));
+        fuelRange.setText(range < 0 ? "--" : withUnit(formatThousands(Math.round(range)), "km"));
     }
 
     /** «54» + «km/h» con la unidad pequeña y atenuada. */
@@ -362,6 +399,91 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         sp.setSpan(new android.text.style.RelativeSizeSpan(0.62f), from, sp.length(), 0);
         sp.setSpan(new android.text.style.ForegroundColorSpan(getColor(R.color.text_dim)), from, sp.length(), 0);
         return sp;
+    }
+
+    /** 48213 → «48 213» (espacio fino, igual en español e inglés). */
+    private static String formatThousands(long v) {
+        String s = Long.toString(v);
+        StringBuilder sb = new StringBuilder(s.length() + 4);
+        for (int i = 0; i < s.length(); i++) {
+            if (i > 0 && (s.length() - i) % 3 == 0) sb.append('\u202F');
+            sb.append(s.charAt(i));
+        }
+        return sb.toString();
+    }
+
+    private void confirmResetTrip() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.odo_reset_title)
+                .setMessage(R.string.odo_reset_msg)
+                .setPositiveButton(R.string.odo_reset, (d, w) -> gps.resetTrip())
+                .setNegativeButton(R.string.cancel_btn, null)
+                .show();
+    }
+
+    // ------------------------------------------------------------------ widget deslizable
+
+    private void setupPager() {
+        boolean last = widgetPrefs.getBoolean("start_last", false);
+        pager.setListener(this::onPageChanged);
+        pager.setPage(last ? widgetPrefs.getInt("page", 0) : 0, false);
+        onPageChanged(pager.page());
+        View.OnLongClickListener settings = v -> { showWidgetSettings(pager.page()); return true; };
+        for (int i = 0; i < pager.count(); i++) pager.getChildAt(i).setOnLongClickListener(settings);
+        speedGauge.setOnLongClickListener(settings);
+        findViewById(R.id.widget_title).setOnLongClickListener(settings);
+        findViewById(R.id.service_done).setOnClickListener(v -> {
+            gps.setService(gps.serviceIntervalKm());
+            Toast.makeText(this, getString(R.string.service_saved, gps.serviceIntervalKm()), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void onPageChanged(int i) {
+        widgetTitle.setText(PAGE_TITLES[i]);
+        pageDots.set(pager.count(), i);
+        if (widgetPrefs.getBoolean("start_last", false)) widgetPrefs.edit().putInt("page", i).apply();
+    }
+
+    private void showWidgetSettings(int page) {
+        switch (page) {
+            case 0: showSpeedSettings(); break;
+            case 1: showOdometerMenu(); break;
+            case 2: showFuelMenu(); break;
+            case 3: showServiceMenu(); break;
+            case 4: showTripMenu(); break;
+            default:
+                new AlertDialog.Builder(this).setTitle(R.string.page_compass).setMessage(R.string.compass_info)
+                        .setPositiveButton(android.R.string.ok, null).show();
+        }
+    }
+
+    private void showSpeedSettings() {
+        final SpeedAlert alert = LauncherApp.get().speedAlert();
+        final boolean startLast = widgetPrefs.getBoolean("start_last", false);
+        CharSequence[] items = {
+                getString(R.string.set_limit, alert.limitKmh() > 0 ? alert.limitKmh() + " km/h" : getString(R.string.limit_none)),
+                getString(alert.voiceEnabled() ? R.string.set_voice_on : R.string.set_voice_off),
+                getString(R.string.set_test_voice),
+                getString(startLast ? R.string.set_start_last : R.string.set_start_speed),
+                getString(Guard.gpsEnabled() ? R.string.odo_menu_gps_off : R.string.odo_menu_gps_on)};
+        new AlertDialog.Builder(this).setTitle(R.string.page_speed)
+                .setItems(items, (d, which) -> {
+                    if (which == 0) askNumber(R.string.page_speed, R.string.set_limit_msg, String.valueOf(alert.limitKmh()), false, R.string.odo_save,
+                            v -> { if (v >= 0 && v <= 250) { alert.setLimitKmh((int) v); onGpsChanged(gps); } }, 0, null);
+                    else if (which == 1) alert.setVoiceEnabled(!alert.voiceEnabled());
+                    else if (which == 2) alert.warn();
+                    else if (which == 3) widgetPrefs.edit().putBoolean("start_last", !startLast).putInt("page", pager.page()).apply();
+                    else if (Guard.gpsEnabled()) { Guard.setGpsEnabled(false); gps.sync(); gps.recheck(); onGpsChanged(gps); }
+                    else fixGps();
+                })
+                .setNegativeButton(R.string.cancel_btn, null).show();
+    }
+
+    private void showTripMenu() {
+        CharSequence[] items = {getString(R.string.odo_menu_reset_trip), getString(R.string.odo_menu_set_trip)};
+        new AlertDialog.Builder(this).setTitle(R.string.page_trip)
+                .setItems(items, (d, which) -> { if (which == 0) confirmResetTrip(); else editTrip(); })
+                .setNegativeButton(R.string.cancel_btn, null).show();
     }
 
     private void showServiceMenu() {
@@ -383,24 +505,51 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
                 .show();
     }
 
-    /** 48213 → «48 213» (espacio fino, igual en español e inglés). */
-    private static String formatThousands(long v) {
-        String s = Long.toString(v);
-        StringBuilder sb = new StringBuilder(s.length() + 4);
-        for (int i = 0; i < s.length(); i++) {
-            if (i > 0 && (s.length() - i) % 3 == 0) sb.append('\u202F');
-            sb.append(s.charAt(i));
-        }
-        return sb.toString();
+    private void showFuelMenu() {
+        CharSequence[] items = {getString(R.string.fuel_add), getString(R.string.fuel_undo), getString(R.string.fuel_tank, gps.tankLiters()),
+                getString(R.string.fuel_clear)};
+        new AlertDialog.Builder(this).setTitle(R.string.page_fuel)
+                .setItems(items, (d, which) -> {
+                    if (which == 0) addFuel();
+                    else if (which == 1) { FuelLog f = gps.fuel(); f.removeLast(); gps.saveFuel(f); renderFuel(gps, true); }
+                    else if (which == 2) askNumber(R.string.page_fuel, R.string.fuel_tank_msg, String.valueOf(gps.tankLiters()), false, R.string.odo_save,
+                            v -> { if (v >= 5 && v <= 300) { gps.setTankLiters((int) v); renderFuel(gps, true); } }, 0, null);
+                    else { gps.saveFuel(new FuelLog()); renderFuel(gps, true); }
+                })
+                .setNegativeButton(R.string.cancel_btn, null).show();
     }
 
-    private void confirmResetTrip() {
-        new AlertDialog.Builder(this)
-                .setTitle(R.string.odo_reset_title)
-                .setMessage(R.string.odo_reset_msg)
-                .setPositiveButton(R.string.odo_reset, (d, w) -> gps.resetTrip())
-                .setNegativeButton(R.string.cancel_btn, null)
-                .show();
+    /** Registrar una carga con el tanque lleno: litros, costo total y kilometraje del tablero. */
+    private void addFuel() {
+        final EditText liters = fuelField(R.string.fuel_liters, "", true);
+        final EditText cost = fuelField(R.string.fuel_cost_total, "", true);
+        final EditText km = fuelField(R.string.fuel_km, String.valueOf((long) Math.floor(gps.totalKm())), false);
+        int pad = Math.round(20 * getResources().getDisplayMetrics().density);
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        box.setPadding(pad, 0, pad, 0);
+        box.addView(liters); box.addView(cost); box.addView(km);
+        new AlertDialog.Builder(this).setTitle(R.string.fuel_add).setMessage(R.string.fuel_add_msg).setView(box)
+                .setPositiveButton(R.string.odo_save, (d, w) -> {
+                    try {
+                        double l = Double.parseDouble(liters.getText().toString().trim().replace(',', '.'));
+                        String c = cost.getText().toString().trim().replace(',', '.');
+                        double k = Double.parseDouble(km.getText().toString().trim().replace(',', '.'));
+                        FuelLog f = gps.fuel();
+                        if (f.add(k, l, c.isEmpty() ? 0 : Double.parseDouble(c))) { gps.saveFuel(f); renderFuel(gps, true); }
+                        else Toast.makeText(this, R.string.fuel_invalid, Toast.LENGTH_LONG).show();
+                    } catch (NumberFormatException e) { Toast.makeText(this, R.string.fuel_invalid, Toast.LENGTH_LONG).show(); }
+                })
+                .setNegativeButton(R.string.cancel_btn, null).show();
+    }
+
+    private EditText fuelField(int hint, String initial, boolean decimal) {
+        EditText e = new EditText(this);
+        e.setInputType(InputType.TYPE_CLASS_NUMBER | (decimal ? InputType.TYPE_NUMBER_FLAG_DECIMAL : 0));
+        e.setHint(hint);
+        e.setText(initial);
+        e.setTextSize(22);
+        return e;
     }
 
     private void showOdometerMenu() {

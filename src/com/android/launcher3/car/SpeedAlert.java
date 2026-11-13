@@ -67,8 +67,13 @@ public final class SpeedAlert implements GpsTracker.Listener {
         Diag.log("gps", kmh > 0 ? "límite de velocidad " + kmh + " km/h" : "límite de velocidad desactivado");
     }
 
+    /** El aviso de voz se puede apagar sin perder el límite (el número sigue poniéndose rojo). */
+    public boolean voiceEnabled() { return store.getBoolean("voice", true); }
+
+    public void setVoiceEnabled(boolean on) { store.edit().putBoolean("voice", on).apply(); if (!on) stopPlayer(); }
+
     @Override public void onGpsChanged(GpsTracker gps) {
-        if (limit.onSpeed(gps.speedKmh(), SystemClock.elapsedRealtime())) {
+        if (limit.onSpeed(gps.speedKmh(), SystemClock.elapsedRealtime()) && voiceEnabled()) {
             warnings++;
             Diag.log("gps", "exceso de velocidad: " + Math.round(gps.speedKmh()) + " km/h (límite " + limit.limit() + ")");
             warn();
