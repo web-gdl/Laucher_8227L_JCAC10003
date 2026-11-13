@@ -55,9 +55,8 @@
     <string name="odo_save">Save</string>
     <string name="cancel_btn">Cancel</string>
     <string name="km_format">%1$s km</string>
-    <string name="limit_title">Speed limit</string>
-    <string name="limit_msg">A voice warns you when you go over it. Enter km/h (for example 110).</string>
-    <string name="limit_off">Turn off</string>
+    <string name="limit_none">no limit</string>
+    <string name="limit_prefix">limit</string>
     <string name="odo_menu_title">Odometer</string>
     <string name="odo_menu_reset_trip">Reset trip to 0</string>
     <string name="odo_menu_set_trip">Adjust trip…</string>

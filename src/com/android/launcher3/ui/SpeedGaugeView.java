@@ -8,6 +8,7 @@ import android.graphics.RectF;
 import android.graphics.SweepGradient;
 import android.graphics.Typeface;
 import android.util.AttributeSet;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.android.launcher3.R;
@@ -32,12 +33,27 @@ public final class SpeedGaugeView extends View {
     private final int inkColor;
     private int limitKmh;
     private String limitLabel = "";
+    private final Paint knob = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint knobRing = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final RectF arc = new RectF();
+    private boolean dragging;
+    private OnLimitChange listener;
+    private final String offText, limitPrefix;
     private float kmh = -1f;
     private String label = "--";
 
+    /** Se llama al arrastrar el límite; finished = true al soltar (momento de guardarlo). */
+    public interface OnLimitChange { void onLimit(int kmh, boolean finished); }
+
+    public void setOnLimitChange(OnLimitChange l) { listener = l; }
+
     public SpeedGaugeView(Context c, AttributeSet a) {
         super(c, a);
+        offText = c.getString(R.string.limit_none);
+        limitPrefix = c.getString(R.string.limit_prefix);
+        knob.setColor(0xFFFFFFFF);
+        knobRing.setStyle(Paint.Style.STROKE);
+        knobRing.setColor(RED);
         int ink = c.getColor(R.color.ink), dim = c.getColor(R.color.text_dim);
         track.setStyle(Paint.Style.STROKE);
         track.setStrokeCap(Paint.Cap.ROUND);
@@ -88,6 +104,46 @@ public final class SpeedGaugeView extends View {
         if (number.getColor() != col) { number.setColor(col); invalidate(); }
     }
 
+    /** Velocidad (km/h, múltiplo de 5) que corresponde al punto tocado, o -1 si el toque cae dentro del dial. */
+    private int limitAt(float x, float y, boolean force) {
+        float cx = arc.centerX(), cy = arc.centerY(), r = arc.width() / 2f;
+        double dx = x - cx, dy = y - cy, dist = Math.sqrt(dx * dx + dy * dy);
+        if (!force && dist < r * 0.58f) return -1;
+        double deg = Math.toDegrees(Math.atan2(dy, dx));
+        double a = (deg - START + 720.0) % 360.0;
+        if (a > SWEEP) a = a - SWEEP < (360.0 - SWEEP) / 2.0 ? SWEEP : 0; // hueco inferior: al extremo más cercano
+        int v = (int) (Math.round(a / SWEEP * MAX_KMH / 5.0) * 5);
+        return v < 10 ? 0 : Math.min(v, (int) MAX_KMH);
+    }
+
+    @Override public boolean onTouchEvent(MotionEvent e) {
+        if (listener == null) return super.onTouchEvent(e);
+        switch (e.getActionMasked()) {
+            case MotionEvent.ACTION_DOWN: {
+                int v = limitAt(e.getX(), e.getY(), false);
+                if (v < 0) return super.onTouchEvent(e);
+                dragging = true;
+                if (getParent() != null) getParent().requestDisallowInterceptTouchEvent(true);
+                setLimit(v);
+                listener.onLimit(v, false);
+                return true;
+            }
+            case MotionEvent.ACTION_MOVE:
+                if (!dragging) return super.onTouchEvent(e);
+                int v = limitAt(e.getX(), e.getY(), true);
+                if (v != limitKmh) { setLimit(v); listener.onLimit(v, false); }
+                return true;
+            case MotionEvent.ACTION_UP:
+            case MotionEvent.ACTION_CANCEL:
+                if (!dragging) return super.onTouchEvent(e);
+                dragging = false;
+                listener.onLimit(limitKmh, true);
+                return true;
+            default:
+                return super.onTouchEvent(e);
+        }
+    }
+
     @Override protected void onSizeChanged(int w, int h, int ow, int oh) {
         float size = Math.min(w, h), stroke = size * 0.078f;
         track.setStrokeWidth(stroke);
@@ -106,6 +162,7 @@ public final class SpeedGaugeView extends View {
         progress.setShader(g);
         limitMark.setStrokeWidth(Math.max(2f, size * 0.022f));
         limitText.setTextSize(size * 0.075f);
+        knobRing.setStrokeWidth(Math.max(2f, size * 0.016f));
         number.setTextSize(size * 0.30f);
         unit.setTextSize(size * 0.085f);
     }
@@ -122,16 +179,19 @@ public final class SpeedGaugeView extends View {
             float cos = (float) Math.cos(a), sin = (float) Math.sin(a);
             c.drawLine(cx + cos * inner, cy + sin * inner, cx + cos * (inner - len), cy + sin * (inner - len), tick);
         }
-        if (limitKmh > 0 && limitKmh <= MAX_KMH) {
-            // Marca del límite cruzando el arco y su número por dentro
-            double a = Math.toRadians(START + SWEEP * limitKmh / MAX_KMH);
-            float cos = (float) Math.cos(a), sin = (float) Math.sin(a), half = track.getStrokeWidth() * 0.75f;
-            c.drawLine(cx + cos * (r - half), cy + sin * (r - half), cx + cos * (r + half), cy + sin * (r + half), limitMark);
-            float tr = inner - r * 0.25f;
-            c.drawText(limitLabel, cx + cos * tr, cy + sin * tr + limitText.getTextSize() * 0.36f, limitText);
+        // Tirador del límite sobre el arco (apagado al inicio cuando no hay límite) y su valor bajo «km/h»
+        {
+            double a = Math.toRadians(START + SWEEP * Math.min(limitKmh, MAX_KMH) / MAX_KMH);
+            float cos = (float) Math.cos(a), sin = (float) Math.sin(a), kr = track.getStrokeWidth() * (dragging ? 0.95f : 0.8f);
+            knob.setAlpha(limitKmh > 0 ? 255 : 110);
+            knobRing.setAlpha(limitKmh > 0 ? 255 : 110);
+            c.drawCircle(cx + cos * r, cy + sin * r, kr, knob);
+            c.drawCircle(cx + cos * r, cy + sin * r, kr, knobRing);
         }
         float base = cy + number.getTextSize() * 0.36f;
         c.drawText(label, cx, base, number);
         c.drawText("km/h", cx, base + unit.getTextSize() * 1.9f, unit);
+        limitText.setColor(limitKmh > 0 ? RED : unit.getColor());
+        c.drawText(limitKmh > 0 ? limitPrefix + " " + limitLabel : offText, cx, base + unit.getTextSize() * 1.9f + limitText.getTextSize() * 1.9f, limitText);
     }
 }

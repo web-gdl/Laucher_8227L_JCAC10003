@@ -14,8 +14,7 @@
     <FrameLayout
         android:id="@+id/ring"
         android:layout_width="@dimen/ring_size"
-        android:layout_height="@dimen/ring_size"
-        android:background="@drawable/ring_bg">
+        android:layout_height="@dimen/ring_size">
 
         <ImageView
             android:id="@+id/icon"

@@ -70,6 +70,7 @@ public final class MediaWidget {
         coverPad = ctx.getResources().getDimensionPixelSize(R.dimen.cover_size) / 3;
         cover.setClipToOutline(true); // recorta la portada al óvalo del fondo
         title.setSelected(true);       // marquee
+        artist.setSelected(true);
         setCover(null);
         int[] saved = Backdrop.decode(prefs.getBackdrop());
         if (saved != null) applyBackdrop(saved, Backdrop.encode(saved), false);

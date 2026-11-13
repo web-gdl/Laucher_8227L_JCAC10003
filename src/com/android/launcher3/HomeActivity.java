@@ -139,7 +139,9 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         }
         findViewById(R.id.gauges_card).setOnClickListener(v -> onGaugesTapped());
         // Velocímetro: límite de velocidad. Odómetro: reiniciar o ajustar (pulsación larga: atajos directos).
-        speedGauge.setOnClickListener(v -> { if (!fixGps()) editSpeedLimit(); });
+        speedGauge.setOnClickListener(v -> fixGps());
+        // Límite: se arrastra sobre el arco; se guarda al soltar
+        speedGauge.setOnLimitChange((kmh, finished) -> { if (finished) LauncherApp.get().speedAlert().setLimitKmh(kmh); });
         // Pulsación larga: probar el aviso de voz (atenuar música, volumen alto) sin tener que pasarse del límite
         speedGauge.setOnLongClickListener(v -> { LauncherApp.get().speedAlert().warn(); return true; });
         findViewById(R.id.odo_trip_box).setOnClickListener(v -> showOdometerMenu());
@@ -362,14 +364,6 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
     private void editTotal() {
         askNumber(R.string.odo_total_title, R.string.odo_total_msg, String.valueOf((long) Math.floor(gps.totalKm())), false, R.string.odo_save,
                 v -> { if (v >= 0 && v < 10_000_000) gps.setTotalKm(Math.floor(v)); }, 0, null);
-    }
-
-    private void editSpeedLimit() {
-        final com.android.launcher3.car.SpeedAlert alert = LauncherApp.get().speedAlert();
-        int cur = alert.limitKmh();
-        askNumber(R.string.limit_title, R.string.limit_msg, String.valueOf(cur > 0 ? cur : 110), false, R.string.odo_save,
-                v -> { if (v >= 10 && v <= 250) { alert.setLimitKmh((int) v); onGpsChanged(gps); } },
-                R.string.limit_off, () -> { alert.setLimitKmh(0); onGpsChanged(gps); });
     }
 
     private interface NumberCallback { void onNumber(double value); }
