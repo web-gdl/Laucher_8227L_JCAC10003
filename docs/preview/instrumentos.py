@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Inicio 3.6 (diseño A, 50/50): música en la mitad izquierda; velocidad, brújula y odómetro en la derecha.
+"""Inicio 3.6 (diseño A, 50/50): música y velocímetro en tarjetas de cristal iguales; dock sin círculos.
 
 Genera docs/screenshots/01, 02 y 05 (render del diseño, no capturas del equipo).
     pip install playwright pillow && python3 docs/preview/instrumentos.py
 """
 import math, pathlib, sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from nocturno import INK, ring, ring_app  # noqa: E402
+from nocturno import INK, ring, ring_app, aicon, APPS  # noqa: E402
 from propuestas import frame, ico, cover, btn, prog, ACC, DIM, ART  # noqa: E402
 from playwright.sync_api import sync_playwright  # noqa: E402
 
@@ -28,7 +28,7 @@ def mix(t):
     return "#%02X%02X%02X" % tuple(round(a[i] + (b[i] - a[i]) * u) for i in range(3))
 
 
-def speed_gauge(speed, limit, size=210, maxv=180, stroke=14):
+def speed_gauge(speed, limit, size=250, maxv=180, stroke=14):
     c, r = size / 2, size / 2 - stroke / 2 - 1
     a0, sweep = -135, 270
     track = ""
@@ -47,23 +47,23 @@ def speed_gauge(speed, limit, size=210, maxv=180, stroke=14):
         a = a0 + sweep * v / maxv; l = r * (.11 if v % 40 == 0 else .06)
         (px, py), (qx, qy) = pt(c, inner, a), pt(c, inner - l, a)
         ticks += f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{qx:.1f}" y2="{qy:.1f}" stroke="rgba(255,255,255,.35)" stroke-width="2"/>'
-    lim = ""
-    if limit:
-        a = a0 + sweep * limit / maxv; h = stroke * .75
-        (px, py), (qx, qy) = pt(c, r - h, a), pt(c, r + h, a)
-        tx, ty = pt(c, inner - r * .25, a)
-        lim = (f'<line x1="{px:.1f}" y1="{py:.1f}" x2="{qx:.1f}" y2="{qy:.1f}" stroke="#FF5252" stroke-width="4" stroke-linecap="round"/>'
-               f'<text x="{tx:.1f}" y="{ty + 5:.1f}" text-anchor="middle" font-size="{size * .075:.0f}" fill="#FF5252" font-family="Inter">{limit}</text>')
+    a = a0 + sweep * (limit or 0) / maxv
+    kx, ky = pt(c, r, a)
+    op = 1 if limit else .43
+    lim = (f'<circle cx="{kx:.1f}" cy="{ky:.1f}" r="{stroke*.8:.1f}" fill="#fff" fill-opacity="{op}" stroke="#FF5252" stroke-opacity="{op}" stroke-width="4"/>')
+    lim_txt = (f"límite {limit}" if limit else "sin límite")
+    lim_col = "#FF5252" if limit else DIM
     num_col = "#FF5252" if (speed and limit and speed > limit) else INK
     label = "--" if speed is None else str(speed)
     return (f'<div style="position:relative;width:{size}px;height:{size}px;flex:none">'
             f'<svg width="{size}" height="{size}">{track}{prog_}{ticks}{lim}</svg>'
             f'<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:8px">'
             f'<div style="font-size:{int(size*.30)}px;font-weight:300;color:{num_col};line-height:1">{label}</div>'
-            f'<div style="margin-top:6px;font-size:{int(size*.085)}px;color:{DIM};letter-spacing:1px">km/h</div></div></div>')
+            f'<div style="margin-top:6px;font-size:{int(size*.085)}px;color:{DIM};letter-spacing:1px">km/h</div>'
+            f'<div style="margin-top:8px;font-size:{int(size*.075)}px;color:{lim_col}">{lim_txt}</div></div></div>')
 
 
-def compass(heading, size=130):
+def compass(heading, size=96):
     c, rr = size / 2, size / 2 - 2
     rot = heading if heading is not None else 0
     ticks = ""
@@ -75,7 +75,7 @@ def compass(heading, size=130):
     letters = ""
     for d, t in ((0, "N"), (90, "E"), (180, "S"), (270, "O")):
         x, y = pt(c, rr * .74, d - rot)
-        letters += f'<text x="{x:.1f}" y="{y + 5.5:.1f}" text-anchor="middle" font-size="{16 if t == "N" else 15}" font-weight="600" fill="{ACC if t == "N" else DIM}" font-family="Inter">{t}</text>'
+        letters += f'<text x="{x:.1f}" y="{y + 5.5:.1f}" text-anchor="middle" font-size="{13 if t == "N" else 12}" font-weight="600" fill="{ACC if t == "N" else DIM}" font-family="Inter">{t}</text>'
     arrow_col = INK if heading is not None else "rgba(255,255,255,.25)"
     arrow = f'<path d="M{c},{c - rr*.42:.1f} L{c + rr*.2:.1f},{c + rr*.26:.1f} L{c},{c + rr*.14:.1f} L{c - rr*.2:.1f},{c + rr*.26:.1f} Z" fill="{arrow_col}"/>'
     text = f'{cardinal(heading)} {heading}°' if heading is not None else "—"
@@ -89,31 +89,41 @@ def odo(label, value, grow=1):
             f'<div style="font-size:21px;color:{INK};font-variant-numeric:tabular-nums">{value}</div></div>')
 
 
+def dock_app(i):
+    return (f'<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:104px">{aicon(i, 62)}'
+            f'<div style="font-size:13px;color:{DIM};text-align:center;line-height:1.15;height:30px;overflow:hidden">{APPS[i][0]}</div></div>')
+
+
+def dock_all():
+    return (f'<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:104px"><div style="width:62px;height:62px;display:flex;align-items:center;justify-content:center">{ico("apps", 44, ACC)}</div>'
+            f'<div style="font-size:13px;color:{DIM};text-align:center;line-height:1.15;height:30px;overflow:hidden">Todas</div></div>')
+
+
 def home(speed, heading, limit, trip, total, status=None, playing=True):
     bg = (f'<div style="position:absolute;inset:-80px;background:{ART};filter:blur(70px) saturate(1.2) brightness(.5)"></div>' if playing else "")
     bg += '<div style="position:absolute;left:0;right:0;bottom:0;height:220px;background:linear-gradient(transparent,rgba(0,0,0,.7))"></div>'
     if playing:
-        src, title, artist, cov = "AHORA SUENA · USB", "Camino de noche", "Artista de ejemplo", cover(150, 75)
+        src, title, artist, cov = "AHORA SUENA · USB", "Camino de noche", "Artista de ejemplo", cover(130, 65)
         bar = f'<div style="margin-top:12px">{prog(34, 4)}</div><div style="margin-top:4px;display:flex;justify-content:space-between;font-size:13px;color:{DIM}"><span>1:17</span><span>3:45</span></div>'
         main_ico = "pause"
     else:
         src, title, artist = "MÚSICA", "Sin reproducción", "Toca para abrir la música"
-        cov = f'<div style="width:150px;height:150px;border-radius:75px;background:#1F242D;display:flex;align-items:center;justify-content:center">{ico("note", 60, DIM)}</div>'
+        cov = f'<div style="width:130px;height:130px;border-radius:65px;background:#1F242D;display:flex;align-items:center;justify-content:center">{ico("note", 60, DIM)}</div>'
         bar = '<div style="margin-top:12px;height:4px"></div><div style="margin-top:4px;height:17px"></div>'
         main_ico = "play"
-    music = (f'<div style="flex:1;display:flex;align-items:center;padding:8px">{cov}<div style="flex:1;min-width:0;margin-left:22px">'
+    music = (f'<div style="{GLASS};flex:1;display:flex;align-items:center;padding:12px 18px;box-sizing:border-box">{cov}<div style="flex:1;min-width:0;margin-left:22px">'
              f'<div style="font-size:13px;letter-spacing:3px;color:{ACC}">{src}</div>'
              f'<div style="margin-top:4px;font-size:32px;font-weight:600;color:{INK};line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{title}</div>'
              f'<div style="font-size:19px;color:{DIM}">{artist}</div>{bar}'
              f'<div style="margin-top:10px;display:flex;align-items:center;gap:22px">{btn("prev", 60)}{btn(main_ico, 76, True)}{btn("next", 60)}</div></div></div>')
     st = f'<div style="margin-top:6px;text-align:center;font-size:14px;color:{ACC}">{status}</div>' if status else ""
-    card = (f'<div style="{GLASS};flex:1;padding:16px 20px 14px;box-sizing:border-box;margin-left:26px">'
+    card = (f'<div style="{GLASS};flex:1;padding:16px 20px 14px;box-sizing:border-box;margin-left:20px;display:flex;flex-direction:column;justify-content:center">'
             f'<div style="display:flex;align-items:center">{speed_gauge(speed, limit)}{compass(heading)}</div>{st}'
             f'<div style="height:1px;margin-top:10px;background:rgba(255,255,255,.08)"></div>'
             f'<div style="display:flex;margin-top:10px">{odo("VIAJE", trip + " km")}{odo("TOTAL", total + " km", 1.3)}</div></div>')
-    dock = "".join(ring_app(i) for i in range(6)) + ring("apps", "Todas", accent=True)
+    dock = "".join(dock_app(i) for i in range(6)) + dock_all()
     return frame(f"""{bg}<div style="position:absolute;inset:0;padding:16px 30px 14px;display:flex;flex-direction:column">
-  <div style="flex:1;display:flex;align-items:center">{music}{card}</div>
+  <div style="flex:1;display:flex;align-items:stretch;padding:0 0 14px">{music}{card}</div>
   <div style="display:flex;justify-content:center;gap:14px">{dock}</div>
 </div>""", "#000")
 

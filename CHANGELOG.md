@@ -2,9 +2,24 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.6.0: nuevo diseño, límite arrastrable y aviso de voz grabado
+
+Las novedades se probaron en un emulador de Android 8.1 (arranque, GPS simulado, aviso de voz). **Pendiente de confirmar en el equipo y en carretera**; el arranque conserva el seguro de la 3.5.3.
+
+- **Aviso de voz grabado**: el estéreo no trae voz del sistema, así que el aviso «Está excediendo el límite de velocidad» es un archivo OGG
+  (voz femenina en español mexicano, Piper es_MX-claude-high, Apache-2.0; ver Créditos en el README). Mientras suena baja la música o el vídeo
+  (enfoque de audio «duck») y sube el volumen a ≥ 85 % para que se oiga, y luego lo restaura. Si no se puede reproducir, suena un pitido.
+- **Límite de velocidad arrastrable**: ya no se escribe la cifra; se arrastra el tirador por todo el arco (pasos de 5 km/h, al inicio = sin límite)
+  y se guarda al soltar. Bajo «km/h» se lee «límite 110» o «sin límite».
+- **Rediseño del inicio**: música y velocímetro en dos tarjetas de cristal del mismo alto (50/50); velocímetro más grande (250), brújula más
+  pequeña (96), portada 130 y dock sin círculos detrás de los iconos.
+- **Marquesina** en el título y en el artista cuando son largos.
+- Pulsación larga en el centro del velocímetro: probar el aviso de voz. Tocar el centro sigue activando o reparando el GPS.
+- Imágenes del README regeneradas.
+
 ## 3.5.3: el inicio abre siempre; instrumentos por etapas
 
-**Probada en el JCAC10003 (12-nov-2026): abre bien y el velocímetro y la brújula funcionan.** Versión estable.
+**Probada en el JCAC10003 (12-nov-2026): abre bien y el velocímetro y la brújula funcionan.**
 
 La 3.5.2 no resolvió el bloqueo en el alps 8227L (el inicio no abría y el sistema se congelaba). En un emulador de Android 8.1
 las versiones 3.5.x arrancan bien, así que el fallo depende del equipo; el GPS de este estéreo ya se colgaba de vez en cuando
