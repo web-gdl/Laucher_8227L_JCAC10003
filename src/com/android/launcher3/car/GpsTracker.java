@@ -64,6 +64,7 @@ public final class GpsTracker implements JancarBridge.Listener {
         app = context.getApplicationContext();
         store = app.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         trip = new Trip(Double.longBitsToDouble(store.getLong("trip", 0)), Double.longBitsToDouble(store.getLong("total", 0)));
+        trip.setStats(store.getLong("trip_ms", 0), store.getFloat("trip_max", 0f));
         updateIdleState();
     }
 
@@ -239,7 +240,8 @@ public final class GpsTracker implements JancarBridge.Listener {
             Bundle extras = l.getExtras();
             if (extras != null && extras.containsKey("satellites")) satellites = extras.getInt("satellites", -1);
             double added = trip.onFix(l.getLatitude(), l.getLongitude(), l.hasAccuracy() ? l.getAccuracy() : 999f,
-                    l.hasSpeed(), l.getSpeed(), l.hasBearing(), l.getBearing(), now);
+                    l.hasSpeed(), l.getSpeed(), l.hasBearing(), l.getBearing(),
+                    l.hasAltitude() ? l.getAltitude() : Double.NaN, now);
             unsavedM += added;
             if (unsavedM > 0 && SystemClock.elapsedRealtime() - lastSave > SAVE_EVERY_MS) save();
             state = State.OK;
@@ -270,7 +272,8 @@ public final class GpsTracker implements JancarBridge.Listener {
 
     private void save() {
         store.edit().putLong("trip", Double.doubleToRawLongBits(trip.tripM()))
-                .putLong("total", Double.doubleToRawLongBits(trip.totalM())).apply();
+                .putLong("total", Double.doubleToRawLongBits(trip.totalM()))
+                .putLong("trip_ms", trip.movingMs()).putFloat("trip_max", trip.maxKmh()).apply();
         lastSave = SystemClock.elapsedRealtime();
         unsavedM = 0;
     }
@@ -290,6 +293,41 @@ public final class GpsTracker implements JancarBridge.Listener {
     public double tripKm() { return trip.tripM() / 1000.0; }
 
     public double totalKm() { return trip.totalM() / 1000.0; }
+
+    public long movingMs() { return trip.movingMs(); }
+
+    public float maxKmh() { return trip.maxKmh(); }
+
+    /** km/h o -1 si aún hay poco recorrido. */
+    public float avgKmh() { return trip.avgKmh(); }
+
+    /** Metros sobre el nivel del mar o NaN. */
+    public double altitudeM() { return trip.altitudeM(); }
+
+    // Recordatorio de servicio: «cada N km»; el próximo se guarda como lectura del total
+    public static final int DEFAULT_SERVICE_KM = 10000;
+
+    public int serviceIntervalKm() { return store.getInt("service_interval", DEFAULT_SERVICE_KM); }
+
+    /** Km que faltan para el servicio, o NaN si no hay recordatorio. Negativo = ya pasó. */
+    public double serviceRemainingKm() {
+        long bits = store.getLong("service_next", Long.MIN_VALUE);
+        if (bits == Long.MIN_VALUE) return Double.NaN;
+        return Double.longBitsToDouble(bits) - totalKm();
+    }
+
+    /** Servicio hecho hoy: el siguiente será dentro de {@code intervalKm}. */
+    public void setService(int intervalKm) {
+        store.edit().putInt("service_interval", intervalKm)
+                .putLong("service_next", Double.doubleToRawLongBits(totalKm() + intervalKm)).apply();
+        Diag.log("gps", "servicio en " + intervalKm + " km");
+        notifyChanged();
+    }
+
+    public void clearService() {
+        store.edit().remove("service_next").apply();
+        notifyChanged();
+    }
 
     public void resetTrip() {
         trip.resetTrip();

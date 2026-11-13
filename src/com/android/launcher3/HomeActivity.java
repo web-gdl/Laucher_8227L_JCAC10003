@@ -57,8 +57,9 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
 
     private SpeedGaugeView speedGauge;
     private CompassView compass;
-    private TextView headingText, gpsStatus, odoTrip, odoTotal;
-    private String lastTrip, lastTotal, lastHeading;
+    private TextView headingText, gpsStatus, odoTrip, odoTotal, statTime, statAvg, statMax, statAlt, serviceText;
+    private android.widget.ProgressBar serviceBar;
+    private String lastTrip, lastTotal, lastHeading, lastTime, lastAvg, lastMax, lastAlt, lastService;
     private boolean gaugesPaused;
     private final Runnable gpsVisible = () -> { gps.setHomeVisible(true); safeGps(); };
 
@@ -129,6 +130,13 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         gpsStatus = findViewById(R.id.gps_status);
         odoTrip = findViewById(R.id.odo_trip);
         odoTotal = findViewById(R.id.odo_total);
+        statTime = findViewById(R.id.stat_time);
+        statAvg = findViewById(R.id.stat_avg);
+        statMax = findViewById(R.id.stat_max);
+        statAlt = findViewById(R.id.stat_alt);
+        serviceText = findViewById(R.id.service_text);
+        serviceBar = findViewById(R.id.service_bar);
+        findViewById(R.id.service_box).setOnClickListener(v -> showServiceMenu());
         gaugesPaused = Guard.tripped(Guard.UI);
         if (gaugesPaused) {
             // El arranque anterior no terminó mientras se dibujaban: no se dibujan hasta que el usuario lo pida
@@ -304,6 +312,7 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         if (!trip.equals(lastTrip)) { lastTrip = trip; odoTrip.setText(trip); }
         String total = getString(R.string.km_format, formatThousands(Math.round(Math.floor(g.totalKm()))));
         if (!total.equals(lastTotal)) { lastTotal = total; odoTotal.setText(total); }
+        updateStats(g);
         int msg = gaugesPaused ? R.string.gauges_paused
                 : st == GpsTracker.State.OFF ? (Guard.tripped(Guard.GPS) ? R.string.gps_tripped : R.string.gps_off)
                 : st == GpsTracker.State.NO_PERMISSION ? R.string.gps_no_permission
@@ -316,6 +325,62 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
             gpsStatus.setText(msg);
             gpsStatus.setVisibility(View.VISIBLE);
         }
+    }
+
+    private void updateStats(GpsTracker g) {
+        long min = g.movingMs() / 60000L;
+        String time = String.format(Locale.US, "%d:%02d", min / 60, min % 60);
+        if (!time.equals(lastTime)) { lastTime = time; statTime.setText(withUnit(time, "h")); }
+        float avg = g.avgKmh();
+        String a = avg < 0 ? "--" : String.valueOf(Math.round(avg));
+        if (!a.equals(lastAvg)) { lastAvg = a; statAvg.setText(withUnit(a, getString(R.string.unit_kmh))); }
+        String m = String.valueOf(Math.round(g.maxKmh()));
+        if (!m.equals(lastMax)) { lastMax = m; statMax.setText(withUnit(m, getString(R.string.unit_kmh))); }
+        double alt = g.altitudeM();
+        String al = Double.isNaN(alt) ? "--" : formatThousands(Math.round(alt));
+        if (!al.equals(lastAlt)) { lastAlt = al; statAlt.setText(withUnit(al, "m")); }
+        double rem = g.serviceRemainingKm();
+        String sv = Double.isNaN(rem) ? "-" : String.valueOf(Math.round(rem));
+        if (!sv.equals(lastService)) {
+            lastService = sv;
+            if (Double.isNaN(rem)) {
+                serviceText.setText(R.string.service_none);
+                serviceBar.setProgress(0);
+            } else {
+                long km = Math.round(Math.abs(rem));
+                serviceText.setText(getString(rem < 0 ? R.string.service_late : R.string.service_in, formatThousands(km)));
+                int interval = Math.max(1, g.serviceIntervalKm());
+                serviceBar.setProgress((int) Math.max(0, Math.min(1000, 1000 - rem / interval * 1000)));
+            }
+        }
+    }
+
+    /** «54» + «km/h» con la unidad pequeña y atenuada. */
+    private CharSequence withUnit(String value, String unit) {
+        android.text.SpannableString sp = new android.text.SpannableString(value + " " + unit);
+        int from = value.length() + 1;
+        sp.setSpan(new android.text.style.RelativeSizeSpan(0.62f), from, sp.length(), 0);
+        sp.setSpan(new android.text.style.ForegroundColorSpan(getColor(R.color.text_dim)), from, sp.length(), 0);
+        return sp;
+    }
+
+    private void showServiceMenu() {
+        final int interval = gps.serviceIntervalKm();
+        boolean has = !Double.isNaN(gps.serviceRemainingKm());
+        java.util.ArrayList<CharSequence> items = new java.util.ArrayList<>();
+        items.add(getString(R.string.service_done, interval));
+        items.add(getString(R.string.service_interval));
+        if (has) items.add(getString(R.string.service_remove));
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.service_title)
+                .setItems(items.toArray(new CharSequence[0]), (d, which) -> {
+                    if (which == 0) gps.setService(interval);
+                    else if (which == 1) askNumber(R.string.service_title, R.string.service_interval_msg, String.valueOf(interval), false, R.string.odo_save,
+                            v -> { if (v >= 100 && v <= 200_000) gps.setService((int) v); }, 0, null);
+                    else gps.clearService();
+                })
+                .setNegativeButton(R.string.cancel_btn, null)
+                .show();
     }
 
     /** 48213 → «48 213» (espacio fino, igual en español e inglés). */

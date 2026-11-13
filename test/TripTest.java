@@ -44,6 +44,22 @@ public class TripTest {
         check("velocidad mostrada ≈ 50", Math.abs(t3.speedKmh(n) - 50) < 0.5, String.format("%.1f km/h", t3.speedKmh(n)));
         check("rumbo norte en movimiento", t3.bearing() == 0f && Trip.cardinal(t3.bearing()).equals("N"), "" + t3.bearing());
 
+        check("tiempo en marcha ≈ 120 s", Math.abs(t3.movingMs() - 120_000) < 3000, t3.movingMs() + " ms");
+        check("velocidad media ≈ 50", Math.abs(t3.avgKmh() - 50) < 3, String.format("%.1f km/h", t3.avgKmh()));
+        check("máxima ≈ 50", Math.abs(t3.maxKmh() - 50) < 0.5, String.format("%.1f km/h", t3.maxKmh()));
+        check("parado no cuenta como tiempo en marcha", t.movingMs() == 0, t.movingMs() + " ms");
+        check("media desconocida con poco tiempo", new Trip(0, 0).avgKmh() < 0, "");
+        check("altitud conocida solo si el GPS la trae", Double.isNaN(t3.altitudeM()), "" + t3.altitudeM());
+        n += 1_000_000_000L;
+        t3.onFix(p[0], p[1], 8, true, 14f, true, 0f, 1540.0, n);
+        check("altitud 1540 m", Math.abs(t3.altitudeM() - 1540) < 1e-6, "" + t3.altitudeM());
+        long mv = t3.movingMs();
+        n += 30_000_000_000L; // hueco de 30 s sin posiciones: no se cuenta como marcha
+        t3.onFix(p[0], p[1], 8, true, 14f, true, 0f, n);
+        check("hueco sin posiciones no suma tiempo", t3.movingMs() == mv, (t3.movingMs() - mv) + " ms");
+        t3.resetTrip();
+        check("reiniciar viaje borra estadísticas", t3.movingMs() == 0 && t3.maxKmh() == 0, "");
+
         double before = t3.tripM();
         n += 1_000_000_000L;
         t3.onFix(p[0] + 2000 / M_PER_DEG_LAT, p[1], 8, true, 14f, true, 0f, n); // salto de 2 km en 1 s

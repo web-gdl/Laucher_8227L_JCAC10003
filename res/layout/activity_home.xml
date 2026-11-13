@@ -41,27 +41,28 @@
             android:paddingTop="16dp"
             android:paddingBottom="14dp">
 
-            <!-- Fila principal: música a la izquierda, instrumentos (velocidad, brújula, odómetro) a la derecha -->
+            <!-- Fila principal (diseño A): música | velocidad y brújula | viaje. Tres tarjetas de cristal del mismo alto. -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
                 android:orientation="horizontal"
-                android:baselineAligned="false">
+                android:baselineAligned="false"
+                android:paddingBottom="6dp">
 
                 <!-- Música: portada y textos abren la app (pulsación larga: elegir app) -->
                 <LinearLayout
                     android:id="@+id/media_card"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:orientation="horizontal"
-                    android:gravity="center_vertical"
+                    android:layout_weight="1.05"
+                    android:orientation="vertical"
+                    android:gravity="center"
                     android:background="@drawable/glass_card"
-                    android:paddingStart="18dp"
-                    android:paddingEnd="18dp"
-                    android:paddingTop="12dp"
-                    android:paddingBottom="12dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -74,186 +75,210 @@
                         android:src="@drawable/ic_music_note"
                         android:tint="@color/text_dim" />
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="22dp"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/media_source"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/accent"
-                            android:textSize="13sp"
-                            android:textAllCaps="true"
-                            android:letterSpacing="0.2"
-                            android:singleLine="true"
-                            android:text="@string/media_now_playing" />
-
-                        <TextView
-                            android:id="@+id/media_title"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:textColor="@color/ink"
-                            android:textSize="@dimen/media_title"
-                            android:fontFamily="sans-serif-medium"
-                            android:singleLine="true"
-                            android:ellipsize="marquee"
-                            android:marqueeRepeatLimit="marquee_forever"
-                            android:text="@string/media_idle" />
-
-                        <TextView
-                            android:id="@+id/media_artist"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textColor="@color/text_dim"
-                            android:textSize="@dimen/media_artist"
-                            android:singleLine="true"
-                            android:ellipsize="marquee"
-                            android:marqueeRepeatLimit="marquee_forever"
-                            android:text="@string/media_open_hint" />
-
-                        <ProgressBar
-                            android:id="@+id/media_progress"
-                            style="?android:attr/progressBarStyleHorizontal"
-                            android:layout_width="match_parent"
-                            android:layout_height="4dp"
-                            android:layout_marginTop="12dp"
-                            android:progressDrawable="@drawable/progress_media"
-                            android:max="1000"
-                            android:progress="0" />
-
-                        <LinearLayout
-                            android:id="@+id/media_times"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="4dp"
-                            android:orientation="horizontal">
-
-                            <TextView
-                                android:id="@+id/media_pos"
-                                android:layout_width="0dp"
-                                android:layout_weight="1"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/text_dim"
-                                android:textSize="13sp" />
-
-                            <TextView
-                                android:id="@+id/media_dur"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:textColor="@color/text_dim"
-                                android:textSize="13sp" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="10dp"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <ImageButton
-                                android:id="@+id/media_prev"
-                                style="@style/MediaButton"
-                                android:layout_marginEnd="22dp"
-                                android:src="@drawable/ic_skip_previous"
-                                android:contentDescription="@string/previous" />
-
-                            <ImageButton
-                                android:id="@+id/media_play"
-                                style="@style/MediaButton"
-                                android:layout_width="@dimen/media_btn_main"
-                                android:layout_height="@dimen/media_btn_main"
-                                android:padding="20dp"
-                                android:background="@drawable/round_button_accent_bg"
-                                android:tint="@color/bg"
-                                android:src="@drawable/ic_play"
-                                android:contentDescription="@string/play" />
-
-                            <ImageButton
-                                android:id="@+id/media_next"
-                                style="@style/MediaButton"
-                                android:layout_marginStart="22dp"
-                                android:src="@drawable/ic_skip_next"
-                                android:contentDescription="@string/next" />
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
-
-                <!-- Instrumentos (GPS del estéreo). Si falta permiso o el GPS está apagado, tocar lo resuelve. -->
-                <LinearLayout
-                    android:id="@+id/gauges_card"
-                    android:layout_width="0dp"
-                    android:layout_weight="1"
-                    android:layout_height="match_parent"
-                    android:gravity="center_vertical"
-                    android:layout_marginStart="20dp"
-                    android:orientation="vertical"
-                    android:background="@drawable/glass_card"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:paddingTop="16dp"
-                    android:paddingBottom="14dp">
-
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/media_source"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:layout_marginTop="8dp"
+                        android:gravity="center"
+                        android:textColor="@color/accent"
+                        android:textSize="12sp"
+                        android:textAllCaps="true"
+                        android:letterSpacing="0.2"
+                        android:singleLine="true"
+                        android:text="@string/media_now_playing" />
 
-                        <com.android.launcher3.ui.SpeedGaugeView
-                            android:id="@+id/speed_gauge"
-                            android:layout_width="@dimen/speed_gauge"
-                            android:layout_height="@dimen/speed_gauge" />
+                    <TextView
+                        android:id="@+id/media_title"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:gravity="center"
+                        android:textColor="@color/ink"
+                        android:textSize="@dimen/media_title"
+                        android:fontFamily="sans-serif-medium"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:text="@string/media_idle" />
 
-                        <LinearLayout
-                            android:id="@+id/compass_box"
+                    <TextView
+                        android:id="@+id/media_artist"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:textColor="@color/text_dim"
+                        android:textSize="@dimen/media_artist"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:text="@string/media_open_hint" />
+
+                    <ProgressBar
+                        android:id="@+id/media_progress"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="10dp"
+                        android:progressDrawable="@drawable/progress_media"
+                        android:max="1000"
+                        android:progress="0" />
+
+                    <LinearLayout
+                        android:id="@+id/media_times"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="3dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/media_pos"
                             android:layout_width="0dp"
                             android:layout_weight="1"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:gravity="center_horizontal">
+                            android:textColor="@color/text_dim"
+                            android:textSize="12sp" />
 
-                            <com.android.launcher3.ui.CompassView
-                                android:id="@+id/compass"
-                                android:layout_width="@dimen/compass"
-                                android:layout_height="@dimen/compass" />
-
-                            <TextView
-                                android:id="@+id/heading"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="6dp"
-                                android:textColor="@color/ink"
-                                android:textSize="19sp"
-                                android:singleLine="true" />
-                        </LinearLayout>
+                        <TextView
+                            android:id="@+id/media_dur"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_dim"
+                            android:textSize="12sp" />
                     </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageButton
+                            android:id="@+id/media_prev"
+                            style="@style/MediaButton"
+                            android:layout_marginEnd="18dp"
+                            android:src="@drawable/ic_skip_previous"
+                            android:contentDescription="@string/previous" />
+
+                        <ImageButton
+                            android:id="@+id/media_play"
+                            style="@style/MediaButton"
+                            android:layout_width="@dimen/media_btn_main"
+                            android:layout_height="@dimen/media_btn_main"
+                            android:padding="18dp"
+                            android:background="@drawable/round_button_accent_bg"
+                            android:tint="@color/bg"
+                            android:src="@drawable/ic_play"
+                            android:contentDescription="@string/play" />
+
+                        <ImageButton
+                            android:id="@+id/media_next"
+                            style="@style/MediaButton"
+                            android:layout_marginStart="18dp"
+                            android:src="@drawable/ic_skip_next"
+                            android:contentDescription="@string/next" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Velocidad y brújula (GPS del estéreo). Si falta permiso o el GPS está apagado, tocar lo resuelve. -->
+                <LinearLayout
+                    android:id="@+id/gauges_card"
+                    android:layout_width="0dp"
+                    android:layout_weight="1.15"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical"
+                    android:gravity="center"
+                    android:background="@drawable/glass_card"
+                    android:padding="10dp">
+
+                    <com.android.launcher3.ui.SpeedGaugeView
+                        android:id="@+id/speed_gauge"
+                        android:layout_width="@dimen/speed_gauge"
+                        android:layout_height="@dimen/speed_gauge" />
 
                     <TextView
                         android:id="@+id/gps_status"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
                         android:gravity="center"
                         android:textColor="@color/accent"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
                         android:visibility="gone" />
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="10dp"
-                        android:background="#14FFFFFF" />
+                    <LinearLayout
+                        android:id="@+id/compass_box"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="2dp"
+                        android:orientation="vertical"
+                        android:gravity="center_horizontal">
+
+                        <com.android.launcher3.ui.CompassView
+                            android:id="@+id/compass"
+                            android:layout_width="@dimen/compass"
+                            android:layout_height="@dimen/compass" />
+
+                        <TextView
+                            android:id="@+id/heading"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/ink"
+                            android:textSize="18sp"
+                            android:singleLine="true" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- Viaje: tiempo, velocidad media y máxima, altitud, odómetros y servicio -->
+                <LinearLayout
+                    android:id="@+id/trip_card"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="16dp"
+                    android:orientation="vertical"
+                    android:gravity="center_vertical"
+                    android:background="@drawable/glass_card"
+                    android:paddingStart="18dp"
+                    android:paddingEnd="18dp"
+                    android:paddingTop="10dp"
+                    android:paddingBottom="10dp">
+
+                    <TextView
+                        style="@style/OdoLabel"
+                        android:textColor="@color/accent"
+                        android:letterSpacing="0.2"
+                        android:text="@string/trip_today" />
+
+                    <LinearLayout style="@style/StatRow">
+                        <ImageView style="@style/StatIcon" android:src="@drawable/ic_stat_clock" />
+                        <TextView style="@style/StatLabel" android:text="@string/stat_moving" />
+                        <TextView android:id="@+id/stat_time" style="@style/StatValue" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/StatRow">
+                        <ImageView style="@style/StatIcon" android:src="@drawable/ic_stat_avg" />
+                        <TextView style="@style/StatLabel" android:text="@string/stat_avg" />
+                        <TextView android:id="@+id/stat_avg" style="@style/StatValue" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/StatRow">
+                        <ImageView style="@style/StatIcon" android:src="@drawable/ic_stat_peak" />
+                        <TextView style="@style/StatLabel" android:text="@string/stat_max" />
+                        <TextView android:id="@+id/stat_max" style="@style/StatValue" />
+                    </LinearLayout>
+
+                    <LinearLayout style="@style/StatRow">
+                        <ImageView style="@style/StatIcon" android:src="@drawable/ic_stat_alt" />
+                        <TextView style="@style/StatLabel" android:text="@string/stat_alt" />
+                        <TextView android:id="@+id/stat_alt" style="@style/StatValue" />
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="10dp"
+                        android:layout_marginTop="6dp"
                         android:orientation="horizontal">
 
                         <!-- Pulsación larga: reiniciar el viaje -->
@@ -273,14 +298,15 @@
 
                             <TextView
                                 android:id="@+id/odo_trip"
-                                style="@style/OdoValue" />
+                                style="@style/OdoValue"
+                                android:textSize="17sp" />
                         </LinearLayout>
 
                         <!-- Pulsación larga: ajustar el total al del tablero del auto -->
                         <LinearLayout
                             android:id="@+id/odo_total_box"
                             android:layout_width="0dp"
-                            android:layout_weight="1.3"
+                            android:layout_weight="1.2"
                             android:layout_height="wrap_content"
                             android:orientation="vertical"
                             android:background="@drawable/touch_bg"
@@ -293,8 +319,55 @@
 
                             <TextView
                                 android:id="@+id/odo_total"
-                                style="@style/OdoValue" />
+                                style="@style/OdoValue"
+                                android:textSize="17sp" />
                         </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Recordatorio de servicio: tocar para programarlo o marcarlo como hecho -->
+                    <LinearLayout
+                        android:id="@+id/service_box"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:orientation="vertical"
+                        android:background="@drawable/touch_bg"
+                        android:clickable="true"
+                        android:focusable="true">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <ImageView
+                                android:layout_width="18dp"
+                                android:layout_height="18dp"
+                                android:src="@drawable/ic_stat_wrench"
+                                android:tint="@color/accent" />
+
+                            <TextView
+                                android:id="@+id/service_text"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="8dp"
+                                android:textColor="@color/text_dim"
+                                android:textSize="14sp"
+                                android:singleLine="true"
+                                android:ellipsize="end" />
+                        </LinearLayout>
+
+                        <ProgressBar
+                            android:id="@+id/service_bar"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:layout_marginTop="5dp"
+                            android:progressDrawable="@drawable/progress_media"
+                            android:max="1000"
+                            android:progress="0" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

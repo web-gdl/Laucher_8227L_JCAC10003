@@ -36,6 +36,15 @@ public final class Trip {
     private double tripM;
     private double totalM;
     private long fixes, rejected;
+    // Estadísticas del viaje (se reinician con él)
+    private long movingMs;
+    private float maxKmh;
+    private double altitudeM = Double.NaN;
+    private long prevFixNanos;
+    /** Un hueco mayor entre posiciones no cuenta como tiempo en marcha. */
+    static final long MAX_GAP_MS = 5000;
+    /** Velocidad media solo a partir de este tiempo en marcha (antes oscila demasiado). */
+    public static final long MIN_AVG_MS = 60_000;
 
     public Trip(double tripM, double totalM) {
         this.tripM = Math.max(0, tripM);
@@ -48,7 +57,15 @@ public final class Trip {
      */
     public double onFix(double lat, double lon, float accuracyM, boolean hasSpeed, float speedMps,
                         boolean hasBearing, float bearingDeg, long elapsedNanos) {
+        return onFix(lat, lon, accuracyM, hasSpeed, speedMps, hasBearing, bearingDeg, Double.NaN, elapsedNanos);
+    }
+
+    /** Igual, con la altitud (m sobre el nivel del mar; NaN si el GPS no la trae). */
+    public double onFix(double lat, double lon, float accuracyM, boolean hasSpeed, float speedMps,
+                        boolean hasBearing, float bearingDeg, double altitude, long elapsedNanos) {
         fixes++;
+        long prevNanos = prevFixNanos;
+        prevFixNanos = elapsedNanos;
         lastFixNanos = elapsedNanos;
         boolean accurate = accuracyM > 0 && accuracyM <= MAX_ACCURACY_M;
 
@@ -65,6 +82,15 @@ public final class Trip {
         if (speedKmh >= 0 && speedKmh < MOVING_KMH - 1f) speedKmh = 0f; // ruido con el auto parado
 
         if (!accurate) { rejected++; return 0; }
+
+        if (!Double.isNaN(altitude) && altitude > -500 && altitude < 9000) altitudeM = altitude;
+        if (speedKmh >= MOVING_KMH && speedKmh <= MAX_PLAUSIBLE_KMH) {
+            if (prevNanos != 0) {
+                long gapMs = (elapsedNanos - prevNanos) / 1_000_000L;
+                if (gapMs > 0 && gapMs <= MAX_GAP_MS) movingMs += gapMs;
+            }
+            if (speedKmh > maxKmh) maxKmh = speedKmh;
+        }
 
         if (hasBearing && speedKmh >= HEADING_KMH) bearing = ((bearingDeg % 360f) + 360f) % 360f;
 
@@ -110,7 +136,21 @@ public final class Trip {
 
     public long rejected() { return rejected; }
 
-    public void resetTrip() { tripM = 0; }
+    public void resetTrip() { tripM = 0; movingMs = 0; maxKmh = 0; }
+
+    /** Tiempo en marcha del viaje (ms). */
+    public long movingMs() { return movingMs; }
+
+    /** Velocidad máxima del viaje (km/h). */
+    public float maxKmh() { return maxKmh; }
+
+    /** Velocidad media en marcha (km/h), o -1 si aún hay poco recorrido. */
+    public float avgKmh() { return movingMs < MIN_AVG_MS ? -1f : (float) (tripM / (movingMs / 1000.0) * 3.6); }
+
+    /** Altitud (m) o NaN si no se conoce. */
+    public double altitudeM() { return altitudeM; }
+
+    public void setStats(long movingMs, float maxKmh) { this.movingMs = Math.max(0, movingMs); this.maxKmh = Math.max(0, maxKmh); }
 
     public void setTripM(double m) { tripM = Math.max(0, m); }
 

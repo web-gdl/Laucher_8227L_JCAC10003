@@ -2,6 +2,17 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.7.0: inicio en tres tarjetas y viaje de hoy
+
+Probada en un emulador de Android 8.1 (arranque, GPS simulado); pendiente de confirmar en el equipo.
+
+- **Tres tarjetas** de cristal del mismo alto: música (portada, título y artista centrados), velocímetro con brújula debajo y **viaje de hoy**.
+- **Viaje de hoy**: tiempo en marcha (solo cuenta con el auto en movimiento y posiciones seguidas), velocidad media (desde 1 min en marcha),
+  velocidad máxima y altitud del GPS. Se guardan y se reinician con el viaje. Lógica en `car/Trip` con pruebas nuevas.
+- **Recordatorio de servicio**: «Servicio en N km» con barra, calculado con el odómetro total. Al tocarlo: servicio hecho hoy, cambiar intervalo
+  (por defecto 10 000 km) o quitarlo.
+- Velocímetro 230, brújula 64, portada 116 y botones de música algo menores para dar espacio a la tarjeta nueva.
+
 ## 3.6.0: nuevo diseño, límite arrastrable y aviso de voz grabado
 
 Las novedades se probaron en un emulador de Android 8.1 (arranque, GPS simulado, aviso de voz). **Pendiente de confirmar en el equipo y en carretera**; el arranque conserva el seguro de la 3.5.3.
