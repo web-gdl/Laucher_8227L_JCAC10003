@@ -104,11 +104,11 @@ public final class SpeedGaugeView extends View {
         if (number.getColor() != col) { number.setColor(col); invalidate(); }
     }
 
-    /** Velocidad (km/h, múltiplo de 5) que corresponde al punto tocado, o -1 si el toque cae dentro del dial. */
+    /** Velocidad (km/h, múltiplo de 5) que corresponde al punto tocado, o -1 si el toque cae dentro del dial (ahí se desliza la página). */
     private int limitAt(float x, float y, boolean force) {
         float cx = arc.centerX(), cy = arc.centerY(), r = arc.width() / 2f;
         double dx = x - cx, dy = y - cy, dist = Math.sqrt(dx * dx + dy * dy);
-        if (!force && dist < r * 0.58f) return -1;
+        if (!force && dist < r * 0.78f) return -1;
         double deg = Math.toDegrees(Math.atan2(dy, dx));
         double a = (deg - START + 720.0) % 360.0;
         if (a > SWEEP) a = a - SWEEP < (360.0 - SWEEP) / 2.0 ? SWEEP : 0; // hueco inferior: al extremo más cercano

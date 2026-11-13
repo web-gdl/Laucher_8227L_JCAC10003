@@ -70,10 +70,10 @@ shot 6c-tras-aviso
 if [ -n "$GXY" ]; then
   GX=${GXY% *}; GY=${GXY#* }
   for n in 2 3 4 5 6; do
-    adb shell input swipe $((GX + 130)) $GY $((GX - 130)) $GY 150; sleep 2; shot 6d-pagina-$n
+    adb shell input swipe $((GX + 80)) $GY $((GX - 80)) $GY 150; sleep 2; shot 6d-pagina-$n
   done
-  adb shell input swipe $((GX - 130)) $GY $((GX + 130)) $GY 150; sleep 1
-  adb shell input swipe $((GX - 130)) $GY $((GX + 130)) $GY 150; sleep 2; shot 6e-vuelta-pagina-4
+  adb shell input swipe $((GX - 80)) $GY $((GX + 80)) $GY 150; sleep 1
+  adb shell input swipe $((GX - 80)) $GY $((GX + 80)) $GY 150; sleep 2; shot 6e-vuelta-pagina-4
   adb shell input swipe $GX $GY $GX $GY 1300; sleep 2; shot 6f-ajustes-de-la-pagina
   adb shell input keyevent KEYCODE_BACK; sleep 1
 fi

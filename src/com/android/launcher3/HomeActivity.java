@@ -429,7 +429,10 @@ public final class HomeActivity extends Activity implements AppsRepository.Liste
         pager.setPage(last ? widgetPrefs.getInt("page", 0) : 0, false);
         onPageChanged(pager.page());
         View.OnLongClickListener settings = v -> { showWidgetSettings(pager.page()); return true; };
-        for (int i = 0; i < pager.count(); i++) pager.getChildAt(i).setOnLongClickListener(settings);
+        for (int i = 0; i < pager.count(); i++) {
+            pager.getChildAt(i).setOnLongClickListener(settings);
+            pager.getChildAt(i).setOnClickListener(v -> fixGps()); // sin GPS o sin permiso, tocar el widget lo resuelve
+        }
         speedGauge.setOnLongClickListener(settings);
         findViewById(R.id.widget_title).setOnLongClickListener(settings);
         findViewById(R.id.service_done).setOnClickListener(v -> {
