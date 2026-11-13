@@ -6,7 +6,7 @@
     <dimen name="card_radius">18dp</dimen>
     <dimen name="tile_radius">16dp</dimen>
 
-    <dimen name="cover_size">150dp</dimen>
+    <dimen name="cover_size">130dp</dimen>
     <dimen name="media_title">32sp</dimen>
     <dimen name="media_artist">19sp</dimen>
     <dimen name="media_btn">60dp</dimen>
@@ -15,14 +15,12 @@
     <dimen name="app_label">14sp</dimen>
 
     <!-- Inicio nocturno -->
-    <dimen name="media_text_width">320dp</dimen>
     <dimen name="media_btn_main">76dp</dimen>
-    <dimen name="ring_cell">96dp</dimen>
-    <dimen name="ring_size">76dp</dimen>
-    <dimen name="ring_icon">44dp</dimen>
+    <dimen name="ring_cell">104dp</dimen>
+    <dimen name="ring_size">62dp</dimen>
+    <dimen name="ring_icon">62dp</dimen>
 
     <!-- Instrumentos -->
-    <dimen name="gauges_width">340dp</dimen>
-    <dimen name="speed_gauge">180dp</dimen>
-    <dimen name="compass">110dp</dimen>
+    <dimen name="speed_gauge">250dp</dimen>
+    <dimen name="compass">96dp</dimen>
 </resources>
