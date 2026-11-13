@@ -1,7 +1,6 @@
 package com.android.launcher3.car;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import android.content.SharedPreferences;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
@@ -14,6 +13,11 @@ import android.os.SystemClock;
 
 import com.android.launcher3.Diag;
 import com.android.launcher3.R;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Aviso de voz por exceso de velocidad: «Está excediendo el límite de velocidad», con voz femenina en español de México,
@@ -78,8 +82,7 @@ public final class SpeedAlert implements GpsTracker.Listener {
         try {
             MediaPlayer mp = new MediaPlayer();
             mp.setAudioAttributes(attributes());
-            AssetFileDescriptor fd = app.getResources().openRawResourceFd(R.raw.exceso_velocidad);
-            try { mp.setDataSource(fd.getFileDescriptor(), fd.getStartOffset(), fd.getLength()); } finally { fd.close(); }
+            mp.setDataSource(audioFile().getAbsolutePath());
             mp.setVolume(1f, 1f);
             mp.setOnCompletionListener(m -> { lastResult = "reproducido"; endDucking(); });
             mp.setOnErrorListener((m, what, extra) -> {
@@ -96,6 +99,23 @@ public final class SpeedAlert implements GpsTracker.Listener {
             lastResult = "fallo (pitido): " + e.getClass().getSimpleName();
             beep();
         }
+    }
+
+    /**
+     * El audio está comprimido dentro del APK y openRawResourceFd() solo abre recursos sin comprimir (fallaba con
+     * NotFoundException), así que se copia una vez a la caché y se reproduce desde ahí.
+     */
+    private File audioFile() throws IOException {
+        File f = new File(app.getCacheDir(), "exceso_velocidad.ogg");
+        if (f.length() > 0) return f;
+        File tmp = new File(app.getCacheDir(), "exceso_velocidad.tmp");
+        try (InputStream in = app.getResources().openRawResource(R.raw.exceso_velocidad);
+             FileOutputStream out = new FileOutputStream(tmp)) {
+            byte[] buf = new byte[8192];
+            for (int n; (n = in.read(buf)) > 0; ) out.write(buf, 0, n);
+        }
+        if (!tmp.renameTo(f)) throw new IOException("no se pudo guardar el audio en la caché");
+        return f;
     }
 
     private static AudioAttributes attributes() {
