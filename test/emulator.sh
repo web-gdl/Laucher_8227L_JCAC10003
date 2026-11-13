@@ -59,10 +59,24 @@ echo "velocímetro en $GXY" | tee $O/aviso.txt
 adb shell media volume --stream 3 --set 4 >> $O/aviso.txt 2>&1 || true
 adb shell dumpsys audio | grep -iE "STREAM_MUSIC|streamVolume" -A3 | head -12 >> $O/aviso.txt
 [ -n "$GXY" ] && adb shell input swipe $GXY $GXY 1300
+sleep 2; shot 6a-ajustes-velocimetro
+tap_text "Test the voice"
 sleep 2; adb shell dumpsys audio | grep -iE "focus|duck" | head -20 >> $O/aviso.txt
 shot 6b-aviso
 sleep 9; adb shell dumpsys audio | grep -iE "focus stack|Audio Focus" -A4 | head -10 >> $O/aviso-despues.txt
 shot 6c-tras-aviso
+
+# 2c) Widget deslizable: pasar por las 6 páginas con deslizamientos y volver
+if [ -n "$GXY" ]; then
+  GX=${GXY% *}; GY=${GXY#* }
+  for n in 2 3 4 5 6; do
+    adb shell input swipe $((GX + 80)) $GY $((GX - 80)) $GY 150; sleep 2; shot 6d-pagina-$n
+  done
+  adb shell input swipe $((GX - 80)) $GY $((GX + 80)) $GY 150; sleep 1
+  adb shell input swipe $((GX - 80)) $GY $((GX + 80)) $GY 150; sleep 2; shot 6e-vuelta-pagina-4
+  adb shell input swipe $GX $GY $GX $GY 1300; sleep 2; shot 6f-ajustes-de-la-pagina
+  adb shell input keyevent KEYCODE_BACK; sleep 1
+fi
 
 # 3) Avisos de ACC como los manda el estéreo: repetidos y apagado/encendido seguidos
 acc true; acc true; sleep 1; acc true; sleep 8; shot 7-acc-repetido

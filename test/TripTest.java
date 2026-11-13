@@ -1,3 +1,4 @@
+import com.android.launcher3.car.FuelLog;
 import com.android.launcher3.car.SpeedLimit;
 import com.android.launcher3.car.Trip;
 
@@ -120,6 +121,22 @@ public class TripTest {
         sl.setLimit(0);
         check("límite desactivado no avisa", !sl.onSpeed(200, ms) && !sl.onSpeed(200, ms + 5000), "");
         check("velocidad desconocida no avisa", !new SpeedLimit(50).onSpeed(-1, 0), "");
+
+        FuelLog f = new FuelLog();
+        check("combustible: sin cargas no hay promedio", f.avgKmPerL() < 0, "");
+        f.add(10000, 40, 800);
+        check("combustible: una carga no basta", f.avgKmPerL() < 0 && f.lastCostPerKm() < 0, "");
+        f.add(10450, 38, 790);
+        f.add(10900, 40, 840);
+        check("combustible: promedio (900 km / 78 L)", Math.abs(f.avgKmPerL() - 900.0 / 78) < 1e-9, String.format("%.2f km/L", f.avgKmPerL()));
+        check("combustible: costo por km última carga", Math.abs(f.lastCostPerKm() - 840.0 / 450) < 1e-9, String.format("%.2f", f.lastCostPerKm()));
+        check("combustible: autonomía 45 L", Math.abs(f.rangeKm(45) - 45 * 900.0 / 78) < 1e-9, String.format("%.0f km", f.rangeKm(45)));
+        check("combustible: rechaza km que no avanza o litros 0", !f.add(10900, 30, 1) && !f.add(11000, 0, 1) && f.size() == 3, "");
+        FuelLog g = FuelLog.parse(f.serialize());
+        check("combustible: guardar y leer", g.size() == 3 && Math.abs(g.avgKmPerL() - f.avgKmPerL()) < 0.01, f.serialize());
+        g.removeLast();
+        check("combustible: quitar la última", g.size() == 2 && g.lastKm() == 10450, "");
+        check("combustible: texto dañado se ignora", FuelLog.parse("x:y;1:2").size() == 0, "");
 
         System.out.println(fails == 0 ? "\nTodas las pruebas pasaron" : "\n" + fails + " pruebas fallaron");
         System.exit(fails == 0 ? 0 : 1);

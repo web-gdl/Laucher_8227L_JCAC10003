@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Inicio 3.7 (diseño A, tres tarjetas): música, velocímetro con brújula y viaje; dock sin círculos.
+"""Inicio 3.8 (7"): música 60 % y widget deslizable de 6 páginas; dock sin círculos.
 
-Genera docs/screenshots/01, 02 y 05 (render del diseño, no capturas del equipo).
+Genera docs/screenshots/01, 02, 05 y 06 (render del diseño, no capturas del equipo).
     pip install playwright pillow && python3 docs/preview/instrumentos.py
 """
 import math, pathlib, sys
@@ -99,22 +99,6 @@ def dock_all():
             f'<div style="font-size:13px;color:{DIM};text-align:center;line-height:1.15;height:30px;overflow:hidden">Todas</div></div>')
 
 
-def svg(path, s=22, col=DIM):
-    return f'<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="{col}"><path d="{path}"/></svg>'
-
-
-CLOCK = "M11.99,2C6.47,2 2,6.48 2,12s4.47,10 9.99,10C17.52,22 22,17.52 22,12S17.52,2 11.99,2zM12,20c-4.42,0 -8,-3.58 -8,-8s3.58,-8 8,-8 8,3.58 8,8 -3.58,8 -8,8zm0.5,-13H11v6l5.25,3.15 0.75,-1.23 -4.5,-2.67z"
-AVG = "M20.38,8.57l-1.23,1.85a8,8 0 0,1 -0.22,7.58H5.07A8,8 0 0,1 15.58,6.85l1.85,-1.23A10,10 0 0,0 3.35,19a2,2 0 0,0 1.72,1h13.85a2,2 0 0,0 1.74,-1 10,10 0 0,0 -0.27,-10.44zm-9.79,6.84a2,2 0 0,0 2.83,0l5.66,-8.49 -8.49,5.66a2,2 0 0,0 0,2.83z"
-PEAK = "M14,6l-3.75,5 2.85,3.8 -1.6,1.2C9.81,13.75 7,10 7,10l-6,8h22L14,6z"
-WRENCH = "M22.7,19l-9.1,-9.1c0.9,-2.3 0.4,-5 -1.5,-6.9 -2,-2 -5,-2.4 -7.4,-1.3L9,6 6,9 1.6,4.7C0.4,7.1 0.9,10.1 2.9,12.1c1.9,1.9 4.6,2.4 6.9,1.5l9.1,9.1c0.4,0.4 1,0.4 1.4,0l2.3,-2.3c0.5,-0.4 0.5,-1.1 0.1,-1.4z"
-
-
-def stat(icon, label, val, unit=""):
-    return (f'<div style="display:flex;align-items:center;gap:10px;padding:6px 0">{svg(icon, 22)}'
-            f'<div style="flex:1;font-size:14px;color:{DIM}">{label}</div>'
-            f'<div style="font-size:22px;color:{INK};font-variant-numeric:tabular-nums">{val}<span style="font-size:14px;color:{DIM};margin-left:4px">{unit}</span></div></div>')
-
-
 def dock_app(i):
     return (f'<div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:104px">{aicon(i, 62)}'
             f'<div style="font-size:13px;color:{DIM};text-align:center;line-height:1.15;height:30px;overflow:hidden">{APPS[i][0]}</div></div>')
@@ -125,51 +109,70 @@ def dock_all():
             f'<div style="font-size:13px;color:{DIM};text-align:center;line-height:1.15;height:30px;overflow:hidden">Todas</div></div>')
 
 
-def home(speed, heading, limit, trip, total, status=None, playing=True, stats=("0:42", "54", "118", "1 540"), service=("Servicio en <b style=\"color:%s;font-weight:600\">1 240 km</b>" % INK, 76)):
-    bg = (f'<div style="position:absolute;inset:-80px;background:{ART};filter:blur(70px) saturate(1.2) brightness(.5)"></div>' if playing else "")
-    bg += '<div style="position:absolute;left:0;right:0;bottom:0;height:220px;background:linear-gradient(transparent,rgba(0,0,0,.7))"></div>'
-    if playing:
-        src, title, artist, cov = "AHORA SUENA · USB", "Camino de noche", "Artista de ejemplo", cover(116, 58)
-        bar = f'<div style="width:100%;margin-top:10px">{prog(34, 4)}</div><div style="width:100%;margin-top:3px;display:flex;justify-content:space-between;font-size:12px;color:{DIM}"><span>1:17</span><span>3:45</span></div>'
-        main_ico = "pause"
-    else:
-        src, title, artist = "MÚSICA", "Sin reproducción", "Toca para abrir la música"
-        cov = f'<div style="width:116px;height:116px;border-radius:58px;background:#1F242D;display:flex;align-items:center;justify-content:center">{ico("note", 48, DIM)}</div>'
-        bar = '<div style="width:100%;margin-top:10px;height:4px"></div><div style="margin-top:3px;height:15px"></div>'
-        main_ico = "play"
-    music = (f'<div style="{GLASS};flex:1.05;min-width:0;padding:10px 16px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">{cov}'
-             f'<div style="margin-top:8px;font-size:12px;letter-spacing:3px;color:{ACC}">{src}</div>'
-             f'<div style="margin-top:2px;max-width:100%;font-size:26px;font-weight:600;color:{INK};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{title}</div>'
-             f'<div style="font-size:17px;color:{DIM}">{artist}</div>{bar}'
-             f'<div style="margin-top:8px;display:flex;align-items:center;gap:18px">{btn("prev", 54)}{btn(main_ico, 68, True)}{btn("next", 54)}</div></div>')
-    st = f'<div style="text-align:center;font-size:13px;color:{ACC}">{status}</div>' if status else ""
-    gauge = (f'<div style="{GLASS};flex:1.15;min-width:0;margin-left:16px;padding:10px;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center">'
-             f'{speed_gauge(speed, limit, 230)}{st}<div style="margin-top:2px">{compass(heading, 64)}</div></div>')
-    t, avg, mx, alt = stats
-    sv, pct = service
-    tripc = (f'<div style="{GLASS};flex:1;min-width:0;margin-left:16px;padding:10px 18px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center">'
-             f'<div style="font-size:12px;letter-spacing:3px;color:{ACC}">VIAJE DE HOY</div>'
-             f'{stat(CLOCK, "En marcha", t, "h")}{stat(AVG, "Vel. media", avg, "km/h")}{stat(PEAK, "Vel. máxima", mx, "km/h")}{stat(PEAK, "Altitud", alt, "m")}'
-             f'<div style="margin-top:6px;display:flex">{odo("VIAJE", trip + " km")}{odo("TOTAL", total + " km", 1.2)}</div>'
-             f'<div style="margin-top:6px;display:flex;align-items:center;gap:8px;font-size:14px;color:{DIM}">{svg(WRENCH, 18, ACC)}{sv}</div>'
-             f'<div style="margin-top:5px">{prog(pct, 4)}</div></div>')
-    dock = "".join(dock_app(i) for i in range(6)) + dock_all()
-    return frame(f"""{bg}<div style="position:absolute;inset:0;padding:16px 30px 14px;display:flex;flex-direction:column">
-  <div style="flex:1;display:flex;align-items:stretch;padding:6px 0 10px">{music}{gauge}{tripc}</div>
-  <div style="display:flex;justify-content:center;gap:8px;padding-bottom:4px">{dock}</div>
-</div>""", "#000")
-
+PARAM = {}
+def svg(path, s=22, col=DIM): return f'<svg width="{s}" height="{s}" viewBox="0 0 24 24" fill="{col}"><path d="{path}"/></svg>'
+WRENCH="M22.7,19l-9.1,-9.1c0.9,-2.3 0.4,-5 -1.5,-6.9 -2,-2 -5,-2.4 -7.4,-1.3L9,6 6,9 1.6,4.7C0.4,7.1 0.9,10.1 2.9,12.1c1.9,1.9 4.6,2.4 6.9,1.5l9.1,9.1c0.4,0.4 1,0.4 1.4,0l2.3,-2.3c0.5,-0.4 0.5,-1.1 0.1,-1.4z"
+FUEL="M19.77,7.23l0.01,-0.01 -3.72,-3.72L15,4.56l2.11,2.11C16.17,7.03 15.5,7.93 15.5,9c0,1.38 1.12,2.5 2.5,2.5 0.36,0 0.69,-0.08 1,-0.21v7.21c0,0.55 -0.45,1 -1,1s-1,-0.45 -1,-1V14c0,-1.1 -0.9,-2 -2,-2h-1V5c0,-1.1 -0.9,-2 -2,-2H6c-1.1,0 -2,0.9 -2,2v16h10v-7.5h1.5v5c0,1.38 1.12,2.5 2.5,2.5s2.5,-1.12 2.5,-2.5V9c0,-0.69 -0.28,-1.32 -0.73,-1.77zM12,10H6V5h6v5zM18,10c-0.55,0 -1,-0.45 -1,-1s0.45,-1 1,-1 1,0.45 1,1 -0.45,1 -1,1z"
+GEAR="M19.14,12.94c0.04,-0.3 0.06,-0.61 0.06,-0.94 0,-0.32 -0.02,-0.64 -0.07,-0.94l2.03,-1.58c0.18,-0.14 0.23,-0.41 0.12,-0.61l-1.92,-3.32c-0.12,-0.22 -0.37,-0.29 -0.59,-0.22l-2.39,0.96c-0.5,-0.38 -1.03,-0.7 -1.62,-0.94l-0.36,-2.54c-0.04,-0.24 -0.24,-0.41 -0.48,-0.41h-3.84c-0.24,0 -0.43,0.17 -0.47,0.41l-0.36,2.54c-0.59,0.24 -1.13,0.57 -1.62,0.94l-2.39,-0.96c-0.22,-0.08 -0.47,0 -0.59,0.22L2.74,8.87c-0.12,0.21 -0.08,0.47 0.12,0.61l2.03,1.58c-0.05,0.3 -0.09,0.63 -0.09,0.94s0.02,0.64 0.07,0.94l-2.03,1.58c-0.18,0.14 -0.23,0.41 -0.12,0.61l1.92,3.32c0.12,0.22 0.37,0.29 0.59,0.22l2.39,-0.96c0.5,0.38 1.03,0.7 1.62,0.94l0.36,2.54c0.05,0.24 0.24,0.41 0.48,0.41h3.84c0.24,0 0.44,-0.17 0.47,-0.41l0.36,-2.54c0.59,-0.24 1.13,-0.56 1.62,-0.94l2.39,0.96c0.22,0.08 0.47,0 0.59,-0.22l1.92,-3.32c0.12,-0.22 0.07,-0.47 -0.12,-0.61l-2.01,-1.58zM12,15.6c-1.98,0 -3.6,-1.62 -3.6,-3.6s1.62,-3.6 3.6,-3.6 3.6,1.62 3.6,3.6 -1.62,3.6 -3.6,3.6z"
+NAMES=["Velocímetro","Odómetro","Consumo","Servicio","Viaje de hoy","Brújula"]
+def bg():
+    return (f'<div style="position:absolute;inset:-80px;background:{ART};filter:blur(70px) saturate(1.2) brightness(.5)"></div>'
+            '<div style="position:absolute;left:0;right:0;bottom:0;height:220px;background:linear-gradient(transparent,rgba(0,0,0,.7))"></div>')
+def music(w=None):
+    return (f'<div style="{GLASS};flex:6;min-width:0;padding:16px 24px;box-sizing:border-box;display:flex;align-items:center;gap:26px">'
+            f'<div style="display:flex;flex-direction:column;align-items:center">{cover(190,95)}</div>'
+            f'<div style="flex:1;min-width:0"><div style="font-size:14px;letter-spacing:3px;color:{ACC}">AHORA SUENA · USB</div>'
+            f'<div style="margin-top:4px;font-size:32px;font-weight:600;color:{INK};line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Camino de noche</div>'
+            f'<div style="font-size:22px;color:{DIM};margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Artista de ejemplo · Álbum</div>'
+            f'<div style="margin-top:16px">{prog(34,6)}</div><div style="display:flex;justify-content:space-between;font-size:15px;color:{DIM};margin-top:4px"><span>1:17</span><span>3:45</span></div>'
+            f'<div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:24px">{btn("prev",72)}{btn("pause",92,True)}{btn("next",72)}</div></div></div>')
+def big(label, val, unit="", col=INK, size=64):
+    return (f'<div style="text-align:center"><div style="font-size:15px;letter-spacing:3px;color:{DIM}">{label}</div>'
+            f'<div style="font-size:{size}px;line-height:1.05;color:{col};font-variant-numeric:tabular-nums">{val}<span style="font-size:{int(size*.38)}px;color:{DIM};margin-left:6px">{unit}</span></div></div>')
+def row(label, val, unit=""):
+    return (f'<div style="display:flex;align-items:baseline;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07)">'
+            f'<span style="font-size:19px;color:{DIM}">{label}</span><span style="font-size:34px;color:{INK};font-variant-numeric:tabular-nums">{val}<span style="font-size:17px;color:{DIM};margin-left:5px">{unit}</span></span></div>')
+def page(i):
+    if i==0: return speed_gauge(PARAM["speed"],110,300) + (f'<div style="font-size:14px;color:{ACC};text-align:center">{PARAM["status"]}</div>' if PARAM["status"] else "")
+    if i==1: return (f'<div style="display:flex;flex-direction:column;gap:26px;width:100%">{big("VIAJE","18.4","km",INK,78)}{big("TOTAL","48 213","km",INK,78)}'
+                     f'<div style="text-align:center;font-size:15px;color:{DIM}">Mantén presionado: reiniciar o ajustar</div></div>')
+    if i==2: return (f'<div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:8px">{big("PROMEDIO","11.8","km/L",INK,70)}'
+                     f'<div style="width:100%">{row("Última carga","32.5","L")}{row("Costo por km","$1.74")}{row("Autonomía","412","km")}</div></div>')
+    if i==3: return (f'<div style="width:100%;display:flex;flex-direction:column;align-items:center;gap:16px">{svg(WRENCH,44,ACC)}{big("SERVICIO EN","1 240","km",INK,84)}'
+                     f'<div style="width:100%">{prog(88,10)}</div><div style="font-size:17px;color:{DIM}">Cada 10 000 km · último a los 38 973 km</div>'
+                     f'<div style="padding:12px 26px;border-radius:30px;background:rgba(255,179,71,.16);border:1px solid {ACC};color:{ACC};font-size:19px">Servicio hecho hoy</div></div>')
+    if i==4: return (f'<div style="width:100%">{row("En marcha","0:42","h")}{row("Vel. media","54","km/h")}{row("Vel. máxima","118","km/h")}{row("Altitud","1 540","m")}{row("Distancia","18.4","km")}</div>')
+    return (f'<div style="display:flex;flex-direction:column;align-items:center;gap:6px">{compass(PARAM["heading"],250)}</div>')
+def widget(i, extra=""):
+    dots="".join(f'<div style="width:{26 if k==i else 10}px;height:10px;border-radius:5px;background:{ACC if k==i else "rgba(255,255,255,.3)"}"></div>' for k in range(6))
+    return (f'<div style="{GLASS};flex:4;min-width:0;margin-left:16px;padding:14px 20px 12px;box-sizing:border-box;display:flex;flex-direction:column;position:relative">'
+            f'<div style="display:flex;justify-content:space-between;align-items:center;height:26px"><span style="font-size:14px;letter-spacing:3px;color:{ACC};text-transform:uppercase">{NAMES[i]}</span>'
+            f'<span style="display:flex;align-items:center;gap:6px;font-size:12px;color:{DIM}">{svg(GEAR,16,DIM)}mantén</span></div>'
+            f'<div style="flex:1;display:flex;align-items:center;justify-content:center;min-height:0">{page(i)}</div>'
+            f'<div style="display:flex;justify-content:center;align-items:center;gap:8px;height:16px">{dots}</div>{extra}</div>')
+def home_page(i, extra="", speed=72, heading=45, playing=True, status=None):
+    PARAM.update(speed=speed, heading=heading, status=status)
+    dock="".join(dock_app(k) for k in range(6))+dock_all()
+    return frame(f'{bg()}<div style="position:absolute;inset:0;padding:16px 30px 14px;display:flex;flex-direction:column">'
+                 f'<div style="flex:1;display:flex;align-items:stretch;padding:6px 0 28px">{music()}{widget(i, extra)}</div>'
+                 f'<div style="display:flex;justify-content:center;gap:8px;padding-bottom:4px">{dock}</div></div>',"#000")
+def sheet():
+    cells="".join(f'<div style="width:360px;height:388px;position:relative;display:flex">{widget(i).replace("flex:4","flex:1").replace("margin-left:16px","margin-left:0")}</div>' for i in range(6))
+    return (f'<body style="margin:0;background:#0B0D12;width:1160px;font-family:Roboto,sans-serif"><div style="padding:22px;display:grid;grid-template-columns:repeat(3,360px);gap:18px">{cells}</div></body>')
 
 if __name__ == "__main__":
     SHOTS.mkdir(parents=True, exist_ok=True)
-    jobs = [(SHOTS / "01-inicio-reproduciendo.png", lambda: home(72, 45, 110, "18.4", "48 213")),
-            (SHOTS / "02-inicio-reposo.png", lambda: home(None, None, 110, "0.0", "48 213", "Toca para activar velocímetro y odómetro", playing=False, stats=("0:00", "--", "0", "--"))),
-            (SHOTS / "05-limite-de-velocidad.png", lambda: home(118, 300, 110, "52.7", "48 247", stats=("0:58", "54", "118", "1 540")))]
+    jobs = [(SHOTS / "01-inicio-reproduciendo.png", lambda: home_page(0, speed=72)),
+            (SHOTS / "02-inicio-reposo.png", lambda: home_page(0, speed=None, status="Toca para activar velocímetro y odómetro")),
+            (SHOTS / "05-limite-de-velocidad.png", lambda: home_page(0, speed=118))]
     with sync_playwright() as p:
         b = p.chromium.launch()
         pg = b.new_page(viewport={"width": 1024, "height": 600}, device_scale_factor=1)
         for path, fn in jobs:
             pg.set_content(fn()); pg.wait_for_timeout(150)
             pg.screenshot(path=str(path))
+        pg2 = b.new_page(viewport={"width": 1160, "height": 900}, device_scale_factor=1)
+        pg2.set_content(sheet()); pg2.wait_for_timeout(150)
+        pg2.screenshot(path=str(SHOTS / "06-widgets-deslizables.png"), full_page=True)
         b.close()
     print("OK")

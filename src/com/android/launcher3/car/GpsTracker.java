@@ -318,11 +318,26 @@ public final class GpsTracker implements JancarBridge.Listener {
 
     /** Servicio hecho hoy: el siguiente será dentro de {@code intervalKm}. */
     public void setService(int intervalKm) {
-        store.edit().putInt("service_interval", intervalKm)
+        store.edit().putInt("service_interval", intervalKm).putLong("service_last", Double.doubleToRawLongBits(totalKm()))
                 .putLong("service_next", Double.doubleToRawLongBits(totalKm() + intervalKm)).apply();
         Diag.log("gps", "servicio en " + intervalKm + " km");
         notifyChanged();
     }
+
+    /** Lectura del total en el último servicio hecho, o -1. */
+    public double serviceLastKm() {
+        long bits = store.getLong("service_last", Long.MIN_VALUE);
+        return bits == Long.MIN_VALUE ? -1 : Double.longBitsToDouble(bits);
+    }
+
+    // Consumo de gasolina (cargas que registra el usuario, ver FuelLog) y capacidad del tanque
+    public FuelLog fuel() { return FuelLog.parse(store.getString("fuel", "")); }
+
+    public void saveFuel(FuelLog f) { store.edit().putString("fuel", f.serialize()).apply(); notifyChanged(); }
+
+    public int tankLiters() { return store.getInt("tank", 45); }
+
+    public void setTankLiters(int l) { store.edit().putInt("tank", l).apply(); notifyChanged(); }
 
     public void clearService() {
         store.edit().remove("service_next").apply();

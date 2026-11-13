@@ -92,4 +92,30 @@
         <item name="android:fontFeatureSettings">tnum</item>
         <item name="android:singleLine">true</item>
     </style>
+
+    <!-- Página del widget deslizable: contenido centrado que llena el alto -->
+    <style name="WidgetPage">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center</item>
+        <item name="android:clickable">true</item>
+        <item name="android:longClickable">true</item>
+    </style>
+
+    <style name="BigStat">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">vertical</item>
+        <item name="android:gravity">center_horizontal</item>
+    </style>
+
+    <style name="BigValue">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textColor">@color/ink</item>
+        <item name="android:textSize">60sp</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:singleLine">true</item>
+    </style>
 </resources>

@@ -21,6 +21,7 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 </p>
 <p align="center">
   <img src="docs/screenshots/04-diagnostico.png" width="49%" alt="Pantalla de diagnóstico">
+  <img src="docs/screenshots/06-widgets-deslizables.png" width="49%" alt="Las seis páginas del widget deslizable">
 </p>
 
 > Las imágenes son un **render del diseño** a 1024×600 con datos de ejemplo (mismo layout, colores, medidas y vectores
@@ -30,9 +31,9 @@ del estéreo (música, volante, ACC, cámara de reversa) sin necesitar ningún S
 
 ## Estado del proyecto
 
-**Versión estable: 3.7.0** (noviembre de 2026): inicio en tres tarjetas (música · velocidad y brújula · viaje), con tiempo en marcha, velocidad media y máxima, altitud y recordatorio de servicio; límite de velocidad arrastrable y aviso de voz grabado; ver [`CHANGELOG.md`](CHANGELOG.md).
+**Versión estable: 3.8.0** (noviembre de 2026): pensada para pantallas de 7": música al 60 % y un widget al 40 % que se desliza entre 6 páginas (velocímetro, odómetro, consumo, servicio, viaje de hoy y brújula), con ajustes por pulsación larga en cada una; ver [`CHANGELOG.md`](CHANGELOG.md).
 La base de arranque es la de la 3.5.3, **probada por el autor en su JCAC10003** (12-nov-2026): abre bien y el velocímetro y la brújula funcionan.
-Las novedades de la 3.6.0 y 3.7.0 (diseño, tarjeta de viaje, marquesina, límite arrastrable y voz) se probaron en un emulador de Android 8.1; la confirmación en el equipo y en carretera está pendiente.
+**La 3.8.0 fue probada por el autor en su JCAC10003 (13-nov-2026): funciona.** Siguen pendientes de confirmar en carretera el odómetro frente al tablero, el consumo con cargas reales y la audibilidad del aviso de voz.
 Las versiones 3.5.0–3.5.2 no abrían en este equipo: no las uses.
 
 - ✅ Inicio nocturno con música e instrumentos, dock de favoritos y panel de aplicaciones sin recuadros.
@@ -100,20 +101,23 @@ Si no estás seguro de poder revertirla, **no la instales**: usa `Laucher-8227L.
 
 ## Qué hace
 
-- **Inicio** de una sola pantalla con tres tarjetas de cristal (música · velocímetro con brújula · viaje) y un dock con 6 favoritos y «Todas». La hora y el estado los da la barra del sistema.
-- **Velocímetro** de arco (0–180 km/h) con degradado verde → amarillo → rojo, **brújula** con el rumbo (N, NE, E… y grados) y
-  **odómetro** de viaje y total, todo con el GPS del estéreo (1 posición por segundo):
-  - **Límite de velocidad**: arrastra el tirador blanco por el arco del velocímetro (de 5 en 5 km/h; hasta el inicio = sin límite) y se guarda al soltar.
-    Si lo pasas más de 2 s suena una **grabación** de voz femenina en español mexicano: «Está excediendo el límite de velocidad». La música o el vídeo bajan de volumen
-    mientras suena y el volumen sube para que se oiga; se repite cada 30 s mientras sigas por encima (si falla la reproducción, suena un pitido).
-    El número se pone rojo. Pulsación larga en el centro del velocímetro: probar el aviso.
-  - **Viaje de hoy** (tarjeta derecha): tiempo en marcha, velocidad media y máxima, y altitud, todo con el GPS. Se reinician con el viaje.
-    La velocidad media aparece tras 1 minuto en marcha. La altitud del GPS puede variar varios metros.
-  - **Servicio del auto**: toca el recordatorio («Servicio en 1 240 km») para marcar el servicio como hecho hoy, cambiar el intervalo (10 000 km por defecto) o quitarlo.
-    Se calcula con el odómetro total, así que conviene ajustarlo antes al número del tablero.
-  - **Odómetro**: tócalo para *Reiniciar viaje a 0*, *Ajustar viaje* o *Ajustar total* (al número del tablero del auto). Atajos: pulsación larga en Viaje para reiniciarlo, en Total para ajustarlo.
+- **Inicio** de una sola pantalla: tarjeta de música (60 %), widget deslizable (40 %) y un dock con 6 favoritos y «Todas». La hora y el estado los da la barra del sistema.
+  El widget cambia de página **deslizando** (swipe o flick) y muestra puntos de página; **mantén presionado** para abrir los ajustes de la página actual.
+- Las 6 páginas del widget, todas con el GPS del estéreo (1 posición por segundo):
+  1. **Velocímetro** de arco (0–180 km/h) con degradado verde → amarillo → rojo. **Límite de velocidad**: arrastra el tirador blanco por el arco (de 5 en 5 km/h; hasta el inicio = sin límite);
+     se guarda al soltar. Para cambiar de página desliza por el interior del dial, no por el arco.
+     Si pasas el límite más de 2 s suena una **grabación** de voz femenina en español mexicano: «Está excediendo el límite de velocidad». La música o el vídeo bajan de volumen
+     mientras suena y el volumen sube para que se oiga; se repite cada 30 s mientras sigas por encima (si falla la reproducción, suena un pitido). El número se pone rojo.
+     *Mantén presionado*: escribir el límite, apagar el aviso de voz, probarlo, elegir la página de arranque y apagar o activar el GPS.
+  2. **Odómetro**: viaje y total en cifras grandes. *Mantén presionado*: reiniciar el viaje, ajustar viaje o total (al número del tablero del auto), medir con otras apps delante, apagar el GPS.
+  3. **Consumo de gasolina** por el método del tanque lleno. El estéreo no lee el auto, así que registras cada carga (litros, costo opcional y kilometraje del tablero) con *mantén presionado → Registrar carga*.
+     Con dos cargas calcula el promedio (km/L); además muestra la última carga, el costo por km y la autonomía (según la capacidad del tanque, 45 L por defecto, ajustable).
+  4. **Servicio del auto**: «Servicio en 1 240 km» con barra y botón *Servicio hecho hoy*. *Mantén presionado*: cambiar el intervalo (10 000 km por defecto) o quitar el recordatorio.
+     Se calcula con el odómetro total, así que conviene ajustarlo antes al número del tablero.
+  5. **Viaje de hoy**: tiempo en marcha, velocidad media (desde 1 minuto en marcha) y máxima, altitud (puede variar varios metros) y distancia. Se reinician con el viaje.
+  6. **Brújula** con el rumbo (N, NE, E… y grados); parado conserva el último.
   - Se descartan posiciones imprecisas, el «baile» del GPS con el auto parado y los saltos imposibles. Se mide solo con el auto encendido; una notificación
-    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. Empiezan apagados: se activan tocando la tarjeta (y se apagan desde el menú del odómetro).
+    silenciosa «Odómetro» mantiene el GPS activo aunque tengas otra app delante. Empiezan apagados: se activan tocando el widget (y se apagan desde los ajustes del velocímetro o del odómetro).
 - **Música** con título y artista (con marquesina si son largos), portada redonda, fondo con sus colores, progreso, tiempos y anterior / play‑pausa / siguiente. Funciona con las fuentes de fábrica (música, radio,
   vídeo, Bluetooth) y con **apps de terceros**: para estas obtiene el paquete, el estado y la posición de la sesión multimedia de Android, de modo que
   al tocar la portada o el título se abre la app que está sonando. Pulsación larga para elegir la app de música por defecto.
@@ -187,7 +191,8 @@ src/com/android/launcher3/
   media/SessionProbe.java   sesiones multimedia de Android para fuentes de terceros
   ui/MediaWidget.java       música del inicio (portada, tiempos, fondo)
   ui/Backdrop.java          fondo con los colores de la portada (Java puro)
-  ui/SpeedGaugeView.java    velocímetro de arco con degradado y marca del límite
+  ui/WidgetPager.java       páginas que se deslizan (swipe/flick) sin AndroidX; ui/PageDots.java: puntos de página
+  ui/SpeedGaugeView.java    velocímetro de arco con degradado y tirador del límite (arrastrable)
   ui/CompassView.java       brújula (rosa que gira con el rumbo)
   car/Trip.java             velocidad, rumbo y odómetro a partir del GPS (Java puro, con pruebas)
   car/SpeedLimit.java       cuándo avisar por exceso de velocidad (Java puro, con pruebas)
@@ -195,6 +200,7 @@ src/com/android/launcher3/
   car/Guard.java            seguro de arranque por etapas de los instrumentos
   car/PermissionActivity.java  pide el permiso de ubicación fuera de la pantalla de inicio
   car/TripService.java      servicio en primer plano mientras el auto está encendido
+  car/FuelLog.java          consumo por tanque lleno (Java puro, con pruebas)
   car/SpeedAlert.java       aviso de voz grabado (res/raw/exceso_velocidad.ogg), atenuación de la música y pitido de respaldo
   DiagnosticsActivity.java  informe de memoria, servicios y registro
 res/                        layouts, vectores y textos (es/en)
@@ -232,8 +238,8 @@ El aviso de voz (`res/raw/exceso_velocidad.ogg`) se generó con el modelo de voz
 A lightweight, fully native home-screen (launcher) for cheap Jancar/alps **AC8227L** Android car head units such as the **JCAC10003** (1 GB RAM, 1024×600).
 It replaces the factory launcher with a single-activity, ~80 KB, ~26 MB-PSS app that talks to the head unit's `com.jancar.services` (music, ACC, reverse camera, screen-off)
 through its own binder client. Third-party music apps are supported through Android media sessions. Since 3.5 it also shows a GPS speedometer (green→yellow→red),
-a compass, trip/total odometers, a trip card (moving time, average/top speed, altitude) and a service-distance reminder, with a recorded spoken warning (Mexican Spanish) when you exceed a speed limit you set by dragging a knob along the speedometer arc; music/video is ducked meanwhile.
+a swipeable widget (speedometer, odometer, fuel economy, service reminder, trip stats and compass; long-press for each page's settings) next to a bigger music card, with a recorded spoken warning (Mexican Spanish) when you exceed a speed limit you set by dragging a knob along the speedometer arc; music/video is ducked meanwhile.
 
-**Download (stable 3.7.0; the 3.5.3 startup base was tested on the device):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
+**Download (stable 3.8.0; the 3.5.3 startup base was tested on the device):** [`Laucher-8227L.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L.apk) (installs like a normal app; the one to use) ·
 [`Laucher-8227L-reemplazo.apk`](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases/latest/download/Laucher-8227L-reemplazo.apk) (replaces the factory launcher, needs `adb`).
 In daily use on one JCAC10003. APKs are signed with the public AOSP platform test key (see *Seguridad*). Public domain (Unlicense); provided as is, with no warranty.
