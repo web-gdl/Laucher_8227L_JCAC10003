@@ -71,4 +71,18 @@
     <string name="odo_menu_gps_off">Turn off speedometer and odometer</string>
     <string name="odo_menu_gps_on">Turn on speedometer and odometer</string>
     <string name="gps_stuck">The head unit\'s GPS is not responding · restart it (RESET)</string>
+    <string name="trip_today">Today\'s trip</string>
+    <string name="stat_moving">Moving</string>
+    <string name="stat_avg">Avg speed</string>
+    <string name="stat_max">Top speed</string>
+    <string name="stat_alt">Altitude</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="service_none">Tap to set a service reminder</string>
+    <string name="service_in">Service in %1$s km</string>
+    <string name="service_late">Service overdue by %1$s km</string>
+    <string name="service_title">Car service</string>
+    <string name="service_done">Service done today (next in %1$d km)</string>
+    <string name="service_interval">Change the interval…</string>
+    <string name="service_remove">Remove the reminder</string>
+    <string name="service_interval_msg">How many kilometres between services (for example 10000). Counted from today.</string>
 </resources>

@@ -79,4 +79,18 @@
     <string name="odo_menu_gps_off">Apagar velocímetro y odómetro</string>
     <string name="odo_menu_gps_on">Activar velocímetro y odómetro</string>
     <string name="gps_stuck">El GPS del estéreo no responde · reinicia el estéreo (RESET)</string>
+    <string name="trip_today">Viaje de hoy</string>
+    <string name="stat_moving">En marcha</string>
+    <string name="stat_avg">Vel. media</string>
+    <string name="stat_max">Vel. máxima</string>
+    <string name="stat_alt">Altitud</string>
+    <string name="unit_kmh">km/h</string>
+    <string name="service_none">Toca para programar el servicio</string>
+    <string name="service_in">Servicio en %1$s km</string>
+    <string name="service_late">Servicio vencido hace %1$s km</string>
+    <string name="service_title">Servicio del auto</string>
+    <string name="service_done">Servicio hecho hoy (próximo en %1$d km)</string>
+    <string name="service_interval">Cambiar el intervalo…</string>
+    <string name="service_remove">Quitar el recordatorio</string>
+    <string name="service_interval_msg">Cada cuántos kilómetros toca el servicio (por ejemplo 10000). Se cuenta desde hoy.</string>
 </resources>
