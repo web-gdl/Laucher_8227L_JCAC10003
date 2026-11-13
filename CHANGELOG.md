@@ -2,6 +2,21 @@
 
 Todas las versiones se publican en [Releases](https://github.com/web-gdl/Laucher_8227L_JCAC10003/releases) con los dos APK y sus sumas.
 
+## 3.8.0: música 60 % y widget deslizable de 6 páginas (pantallas de 7")
+
+**Probada en el JCAC10003 (13-nov-2026): funciona.** Pendiente de confirmar en carretera: odómetro frente al tablero, consumo con cargas reales y audibilidad del aviso de voz.
+
+- **Diseño para 7"**: música al 60 % (portada 190, título 32 sp, artista 22 sp, botones 72/92/72) y widget al 40 %; más separación entre las tarjetas y el dock.
+- **Widget deslizable** (`ui/WidgetPager`, sin AndroidX) con puntos de página: 1 Velocímetro · 2 Odómetro · 3 Consumo · 4 Servicio · 5 Viaje de hoy · 6 Brújula.
+  Cifras mucho más grandes. Deslizar por el interior del dial cambia de página; arrastrar por el arco cambia el límite de velocidad.
+- **Mantener presionado** abre los ajustes de cada página (límite, voz, página de arranque y GPS; odómetro; consumo; servicio; viaje; información de la brújula).
+- **Consumo de gasolina** (`car/FuelLog`, con pruebas): método del tanque lleno con cargas registradas a mano (litros, costo opcional, kilometraje).
+  Promedio km/L, última carga, costo por km y autonomía según el tanque (45 L por defecto).
+- **Servicio**: página propia con cifra grande, barra, intervalo y último servicio, y botón «Servicio hecho hoy».
+- **Aviso de voz** se puede apagar sin perder el límite. La pulsación larga ya no prueba la voz: está en los ajustes del velocímetro.
+- Sin ajuste de unidades (mph): no se implementó.
+- Imágenes del README regeneradas (nueva: `06-widgets-deslizables.png`).
+
 ## 3.7.0: inicio en tres tarjetas y viaje de hoy
 
 Probada en un emulador de Android 8.1 (arranque, GPS simulado); pendiente de confirmar en el equipo.
