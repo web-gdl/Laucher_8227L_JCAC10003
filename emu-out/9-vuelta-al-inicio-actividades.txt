@@ -1,0 +1,5 @@
+        Run #1: ActivityRecord{befd653 u0 com.webgdl.launcher8227/com.android.launcher3.HomeActivity t7}
+        Run #0: ActivityRecord{ee5d6d7 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t5}
+    mResumedActivity: ActivityRecord{befd653 u0 com.webgdl.launcher8227/com.android.launcher3.HomeActivity t7}
+        Run #0: ActivityRecord{9bf1d95 u0 com.android.settings/.Settings t9}
+3682

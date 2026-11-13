@@ -1,0 +1,13 @@
+ACTIVITY MANAGER SERVICES (dumpsys activity services)
+  User 0 active services:
+  * ServiceRecord{3967194 u0 com.webgdl.launcher8227/com.android.launcher3.car.TripService}
+    intent={cmp=com.webgdl.launcher8227/com.android.launcher3.car.TripService}
+    packageName=com.webgdl.launcher8227
+    processName=com.webgdl.launcher8227
+    baseDir=/data/app/com.webgdl.launcher8227-j_JBhsmo7DjoBGFypZg6fw==/base.apk
+    dataDir=/data/user/0/com.webgdl.launcher8227
+    app=ProcessRecord{1ea9b7a 5357:com.webgdl.launcher8227/u0a79}
+    isForeground=true foregroundId=8227 foregroundNoti=Notification(channel=odometro pri=0 contentView=null vibrate=null sound=null defaults=0x0 flags=0x62 color=0x00000000 vis=PRIVATE)
+    createTime=-15s556ms startingBgTimeout=--
+    lastActivity=-15s556ms restartTime=-15s556ms createdFromFg=true
+    startRequested=true delayedStop=false stopIfKilled=true callStart=true lastStartId=1

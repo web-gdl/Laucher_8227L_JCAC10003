@@ -1,0 +1,6 @@
+        Run #1: ActivityRecord{7624267 u0 com.google.android.packageinstaller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity t8}
+        Run #0: ActivityRecord{4e3a88b u0 com.webgdl.launcher8227/com.android.launcher3.car.PermissionActivity t8}
+    mResumedActivity: ActivityRecord{7624267 u0 com.google.android.packageinstaller/com.android.packageinstaller.permission.ui.GrantPermissionsActivity t8}
+        Run #1: ActivityRecord{befd653 u0 com.webgdl.launcher8227/com.android.launcher3.HomeActivity t7}
+        Run #0: ActivityRecord{ee5d6d7 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t5}
+3682

@@ -1,0 +1,2 @@
+PID inicial=3682 tras ACC=3682 tras reinicio=5357
+OK

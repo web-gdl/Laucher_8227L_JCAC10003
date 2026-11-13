@@ -1,0 +1,1 @@
+11059:11-13 13:37:16.485 I/ActivityManager( 1666): Force stopping com.webgdl.launcher8227 appid=10079 user=0: from pid 5355

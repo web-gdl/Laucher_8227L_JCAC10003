@@ -1,0 +1,25 @@
+11-13 13:34:29.305 W/MediaPlayer( 2203): Couldn't open content://0@settings/system/alarm_alert_cache: java.io.FileNotFoundException: open failed: ENOENT (No such file or directory)
+11-13 13:34:29.306 W/MediaPlayer( 2203): Couldn't open null: java.lang.NullPointerException: uri
+11-13 13:34:29.308 E/MediaPlayerService( 1547): Couldn't open fd for content://settings/system/alarm_alert
+11-13 13:34:29.309 E/MediaPlayerNative( 2203): Unable to create media player
+11-13 13:34:29.309 V/MediaPlayer( 2203): resetDrmState:  mDrmInfo=null mDrmProvisioningThread=null mPrepareDrmInProgress=false mActiveDrmScheme=false
+11-13 13:34:29.309 V/MediaPlayer( 2203): cleanDrmObj: mDrmObj=null mDrmSessionId=null
+11-13 13:34:29.310 V/MediaPlayer( 2203): resetDrmState:  mDrmInfo=null mDrmProvisioningThread=null mPrepareDrmInProgress=false mActiveDrmScheme=false
+11-13 13:34:29.310 V/MediaPlayer( 2203): cleanDrmObj: mDrmObj=null mDrmSessionId=null
+11-13 13:35:07.536 D/LauncherNativo( 3682): seguro: etapa «ui» correcta
+11-13 13:35:17.525 V/MediaPlayer( 4235): resetDrmState:  mDrmInfo=null mDrmProvisioningThread=null mPrepareDrmInProgress=false mActiveDrmScheme=false
+11-13 13:35:17.525 V/MediaPlayer( 4235): cleanDrmObj: mDrmObj=null mDrmSessionId=null
+11-13 13:35:28.684 D/LauncherNativo( 3682): gps: permiso de ubicación concedido
+11-13 13:35:28.702 D/LauncherNativo( 3682): gps: inicio
+11-13 13:35:43.701 D/LauncherNativo( 3682): seguro: etapa «gps» correcta
+11-13 13:36:00.742 D/LauncherNativo( 3682): seguro: etapa «bg» correcta
+11-13 13:36:03.570 D/LauncherNativo( 3682): gps: enfoque de audio para el aviso: concedido
+11-13 13:36:06.424 V/MediaPlayer( 3682): resetDrmState:  mDrmInfo=null mDrmProvisioningThread=null mPrepareDrmInProgress=false mActiveDrmScheme=false
+11-13 13:36:06.424 V/MediaPlayer( 3682): cleanDrmObj: mDrmObj=null mDrmSessionId=null
+11-13 13:36:46.614 D/LauncherNativo( 3682): gps: detenido, total 76 m
+11-13 13:36:46.668 D/LauncherNativo( 3682): gps: inicio
+11-13 13:36:46.723 D/LauncherNativo( 3682): gps: detenido, total 76 m
+11-13 13:36:46.767 D/LauncherNativo( 3682): gps: inicio
+11-13 13:36:54.983 D/LauncherNativo( 3682): gps: detenido, total 76 m
+11-13 13:36:58.017 D/LauncherNativo( 3682): gps: inicio
+11-13 13:37:16.910 D/LauncherNativo( 5357): gps: inicio

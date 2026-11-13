@@ -1,0 +1,3 @@
+        Run #0: ActivityRecord{857d0fe u0 android/com.android.internal.app.ResolverActivity t6}
+    mResumedActivity: ActivityRecord{857d0fe u0 android/com.android.internal.app.ResolverActivity t6}
+        Run #0: ActivityRecord{ee5d6d7 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t5}

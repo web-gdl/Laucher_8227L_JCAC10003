@@ -1,0 +1,18 @@
+velocímetro en 804 237
+[v] will control stream=3 (STREAM_MUSIC)
+[v] will set volume to index=4
+[v] Connecting to AudioService
+- STREAM_MUSIC:
+   Muted: false
+   Min: 0
+   Max: 15
+--
+11-13 13:35:57:984 setStreamVolume(stream:STREAM_MUSIC index:4 flags:0x0) from com.android.commands.media
+MediaFocusControl dump time: 1:36:05 PM
+Audio Focus stack entries (last is top of stack):
+  source:android.os.BinderProxy@3c23f68 -- pack: com.webgdl.launcher8227 -- client: android.media.AudioManager@fcfb732com.android.launcher3.car.SpeedAlert$$ExternalSyntheticLambda5@7ee6c83 -- gain: GAIN_TRANSIENT_MAY_DUCK -- flags:  -- loss: none -- notified: true -- uid: 10079 -- attr: AudioAttributes: usage=USAGE_ASSISTANCE_NAVIGATION_GUIDANCE content=CONTENT_TYPE_SPEECH flags=0x0 tags= bundle=null -- sdk:27
+No external focus policy
+ Notify on duck:  true
+Audio event log: focus commands as seen by MediaFocusControl
+11-13 13:36:03:569 requestAudioFocus() from uid/pid 10079/3682 clientId=android.media.AudioManager@fcfb732com.android.launcher3.car.SpeedAlert$$ExternalSyntheticLambda5@7ee6c83 callingPack=com.webgdl.launcher8227 req=3 flags=0x0 sdk=27
+  ducked players piids:
